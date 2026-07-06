@@ -1,0 +1,239 @@
+/* ===== Global ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== Hero (now with background image) ===== */
+.hero-section {
+  position: relative;
+  min-height: 100vh;                /* ✅ use min-height so it adapts */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* dark overlay (applied via pseudo-element in JSX, but you can also put it here) */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.55); /* matches the inline style */
+  z-index: 1;
+}
+
+.hero-overlay {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #fff;
+  padding: 2rem;
+  border-radius: 16px;
+  max-width: 80%;
+  animation: fadeInUp 1.2s ease-out;
+}
+
+.hero-title {
+  font-weight: 700;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  letter-spacing: 1px;
+}
+
+.hero-subtitle {
+  font-weight: 300;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+}
+
+.hero-btn {
+  padding: 14px 48px;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  background: linear-gradient(45deg, #f50057, #ff4081);
+  color: #fff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(245, 0, 87, 0.4);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Sections ===== */
+.section-padding {
+  padding: 4rem 0;
+}
+.bits{
+  color: #1a267e; 
+}
+.section-title {
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: #1a267e; 
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: linear-gradient(90deg, #1976d2, #f50057);
+  margin: 8px auto 0;
+  border-radius: 2px;
+}
+
+.section-text {
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #072838;
+}
+
+.section-divider {
+  margin: 3rem auto;
+  width: 80%;
+  border-color: #e0e0e0;
+}
+
+/* ===== How It Works Steps ===== */
+.step-card {
+  padding: 2rem 1.5rem;
+  text-align: center;
+  height: 100%;
+  border-radius: 25px;
+  background: #fff;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.step-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+}
+
+.step-number {
+  font-weight: 700;
+  color: #1976d2;
+  opacity: 0.15;
+  font-size: 4rem;
+  margin-bottom: 0.5rem;
+}
+
+.step-title {
+  font-weight: 600;
+  color: #1a237e;
+}
+
+.step-desc {
+  color: #546e7a;
+  margin-top: 0.5rem;
+}
+
+/* ===== Feature Cards ===== */
+.feature-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  background: #fff;
+}
+
+.feature-card:hover {
+  transform: translateY(-12px) scale(1.01);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+}
+
+.feature-image {
+  transition: transform 0.6s ease;
+}
+
+.feature-card:hover .feature-image {
+  transform: scale(1.06);
+}
+
+.feature-card .MuiCardContent-root {
+  flex: 1;
+  padding: 1.5rem;
+}
+
+/* ===== CTA Section ===== */
+.cta-section {
+  background: linear-gradient(135deg, #0d47a1 0%, #1976d2 100%);
+  padding: 5rem 0;
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.cta-btn {
+  padding: 14px 48px;
+  font-size: 1.2rem;
+  border-radius: 50px;
+  background: linear-gradient(45deg, #ff6f00, #ffab00);
+  color: #fff;
+  font-weight: 600;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cta-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 30px rgba(255, 171, 0, 0.4);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .hero-section {
+    min-height: 70vh;
+  }
+  .hero-title {
+    font-size: 2.5rem !important;
+  }
+  .hero-subtitle {
+    font-size: 1.2rem !important;
+  }
+  .hero-btn {
+    padding: 10px 28px;
+    font-size: 1rem;
+  }
+  .section-padding {
+    padding: 2rem 0;
+  }
+  .section-text {
+    font-size: 1rem;
+  }
+  .step-card {
+    padding: 1.5rem 1rem;
+  }
+  .step-number {
+    font-size: 3rem;
+  }
+  .feature-card {
+    margin-bottom: 1.5rem;
+  }
+  .cta-section {
+    padding: 3rem 1rem;
+  }
+}
