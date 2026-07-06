@@ -638,7 +638,6 @@
 // };
 
 // export default Signup;
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -667,6 +666,12 @@ import API from '../common/services/api';
 const Signup: React.FC = () => {
   const navigate = useNavigate();
 
+  // Date validation constants
+  const today = new Date();
+  const minAge = 8;
+  const maxDate = new Date(today.getFullYear() - minAge, today.getMonth(), today.getDate());
+  const maxDateString = maxDate.toISOString().split('T')[0];
+
   const [formData, setFormData] = useState({
     FName: '',
     MName: '',
@@ -681,10 +686,32 @@ const Signup: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [dateError, setDateError] = useState('');
+
+  const validateDateOfBirth = (value: string) => {
+    if (!value) {
+      setDateError('Date of birth is required');
+      return;
+    }
+    const selectedDate = new Date(value);
+    const age = today.getFullYear() - selectedDate.getFullYear();
+    const monthDiff = today.getMonth() - selectedDate.getMonth();
+    const dayDiff = today.getDate() - selectedDate.getDate();
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && dayDiff < 0) ? age - 1 : age;
+
+    if (actualAge < minAge) {
+      setDateError(`You must be at least ${minAge} years old to sign up`);
+    } else {
+      setDateError('');
+    }
+  };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === 'dateOfBirth') {
+      validateDateOfBirth(value);
+    }
   };
 
   const handleSelectChange = (e: SelectChangeEvent<string | number>) => {
@@ -696,6 +723,10 @@ const Signup: React.FC = () => {
     e.preventDefault();
     setError('');
 
+    if (!formData.FName || !formData.LName || !formData.email || !formData.dateOfBirth) {
+      setError('Please fill all required fields');
+      return;
+    }
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -704,8 +735,8 @@ const Signup: React.FC = () => {
       setError('Password must be at least 6 characters');
       return;
     }
-    if (!formData.FName || !formData.LName || !formData.email || !formData.dateOfBirth) {
-      setError('Please fill all required fields');
+    if (dateError) {
+      setError(dateError);
       return;
     }
 
@@ -822,6 +853,8 @@ const Signup: React.FC = () => {
                   <MenuItem value="female">Female</MenuItem>
                 </Select>
               </FormControl>
+
+              {/* ✅ FIXED DATE FIELD – using slotProps.htmlInput */}
               <TextField
                 label="Date of Birth"
                 name="dateOfBirth"
@@ -832,11 +865,15 @@ const Signup: React.FC = () => {
                 fullWidth
                 disabled={loading}
                 size="small"
+                error={!!dateError}
+                helperText={dateError || `Must be at least ${minAge} years old`}
                 slotProps={{
-                  inputLabel: { shrink: true },
+                  inputLabel: { shrink: true },      // ✅ Shrink label
+                  htmlInput: { max: maxDateString }, // ✅ Native max attribute
                 }}
                 sx={{ gridColumn: { xs: '1', sm: 'span 2' } }}
               />
+
               <TextField
                 label="Email"
                 name="email"

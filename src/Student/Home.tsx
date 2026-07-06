@@ -224,7 +224,262 @@
 
 
 
-import React from 'react';
+// import React from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import {
+//   Box,
+//   Container,
+//   Typography,
+//   Card,
+//   CardMedia,
+//   CardContent,
+//   Button,
+//   Divider,
+//   Paper,
+// } from '@mui/material';
+// import './Home.css';
+// // Import the image from assets
+// import heroBg from '../assets/img1.jpg';   
+
+
+// const featureImages = [
+//   {
+//     id: 1,
+//     url: 'https://plus.unsplash.com/premium_photo-1679957333039-285fb913aa2b?q=80&w=726&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+//     title: 'Personalized Learning',
+//     desc: 'AI adapts to your knowledge level and adjusts difficulty automatically.',
+//   },
+//   {
+//     id: 2,
+//         url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=600&h=400&fit=crop',
+
+//     title: 'Instant AI Feedback',
+//     desc: 'Get explanations for every answer instantly.',
+//   },
+//   {
+//     id: 3,
+    
+//     url: 'https://images.unsplash.com/photo-1657534076033-093b5c6047df?q=80&w=928&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+//     title: 'Progress Tracking',
+//     desc: 'Track your performance visually over time.',
+//   },
+//   {
+//     id: 4,
+//         url: 'https://images.unsplash.com/photo-1732579690000-84101b120f7f?q=80&w=776&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+
+//     title: 'Engaging Quizzes',
+//     desc: 'Timed quizzes simulate real exam conditions.',
+//   },
+//   {
+//     id: 5,
+//             url: 'https://images.unsplash.com/photo-1617791160536-598cf32026fb?q=80&w=1528&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+
+//     title: 'AI Recommendations',
+//     desc: 'Smart suggestions based on your weaknesses.',
+//   },
+//   {
+//     id: 6,
+//     url: 'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&h=400&fit=crop',
+//     title: 'Grade 6–12 Coverage',
+//     desc: 'Full curriculum support across subjects.',
+//   },
+
+// ];
+
+// const steps = [
+//   { number: '1', title: 'Choose Subject', desc: 'Select your grade and subject.' },
+//   { number: '2', title: 'Take Quiz', desc: 'Answer questions and learn instantly.' },
+//   { number: '3', title: 'AI Feedback', desc: 'Get personalized insights.' },
+//   { number: '4', title: 'Track Growth', desc: 'Monitor your progress over time.' },
+// ];
+
+// const Home: React.FC = () => {
+//   const navigate = useNavigate();
+
+//   return (
+//     <>
+//       {/* HERO with background image from assets */}
+//       <Box
+//         className="hero-section"
+//         sx={{
+//           backgroundImage: `url(${heroBg})`,
+//           backgroundSize: 'cover',
+//           backgroundPosition: 'center',
+//           position: 'relative',
+         
+//           display: 'flex',
+//           alignItems: 'center',
+//           justifyContent: 'center',
+//           '&::before': {
+//             content: '""',
+//             position: 'absolute',
+//             top: 0,
+//             left: 0,
+//             right: 0,
+//             bottom: 0,
+//             backgroundColor: 'rgba(0, 0, 0, 0.55)', // dark overlay
+//           },
+//         }}
+//       >
+//         <Box
+//           className="hero-overlay"
+//           sx={{
+//             position: 'relative',
+//             zIndex: 1,
+//             textAlign: 'center',
+//             color: 'white',
+//             px: 2,
+//           }}
+//         >
+//           <Container maxWidth="md">
+//             <Typography variant="h2" gutterBottom sx={{ fontWeight: 700 }}>
+//               Learn Smarter with AI
+//             </Typography>
+
+//             <Typography variant="h5" sx={{ mb: 3, fontWeight: 300 }}>
+//               Practice quizzes, get instant feedback, and improve faster.
+//             </Typography>
+// <Button
+//   variant="contained"
+//   color="secondary"
+//   size="large"
+//   onClick={() => navigate('/login')}
+//   sx={{ px: 4, py: 1.5, borderRadius: 30 }}
+// >
+//   Get Started
+// </Button>
+//           </Container>
+//         </Box>
+//       </Box>
+
+//       {/* ABOUT */}
+
+//       <Container maxWidth="lg" sx={{ py: 6 }} className='bits'>
+        
+//         <Typography variant="h3" align="center" gutterBottom>
+//           About QuizAI
+//         </Typography>
+
+//         <Typography variant="body1" align="center"  sx={{ fontWeight: 700, }}>
+//           QuizAI is an AI-powered learning platform for Grades 6–12 students.<br></br>
+//            It adapts to your performance and guides you step-by-step.
+//         </Typography>
+
+//      <Container maxWidth="lg" sx={{ py: 6 }}>
+       
+//         <Box
+//           sx={{
+//             display: 'flex',
+//             flexWrap: 'wrap',
+//             justifyContent: 'center',
+//             gap: 3,
+//           }}
+//         >
+//           {steps.map((step) => (
+//             <Paper
+//               key={step.number}
+//               elevation={3}
+//               sx={{
+//                 p: 3,
+//                 textAlign: 'center',
+//                 width: '500px',
+//                 height: '200px',
+//                 border: '2.5px solid #7C3AED',
+//                 borderRadius: '20px',
+//               }}
+//             >
+//               <Typography variant="h2" sx={{ fontWeight: 700, color: '#7C3AED' }}>
+//                 {step.number}
+//               </Typography>
+//               <Typography variant="h6" sx={{ fontWeight: 600 }}>
+//                 {step.title}
+//               </Typography>
+//               <Typography variant="body2" color="text.secondary">
+//                 {step.desc}
+//               </Typography>
+//             </Paper>
+//           ))}
+//         </Box>
+
+//         <Divider sx={{ my: 5 }} />
+//       </Container>
+// <Typography variant="h4" align="center" gutterBottom>
+//           Key Features
+//         </Typography>
+
+//         <Box
+//           sx={{
+//             display: 'flex',
+//             flexWrap: 'wrap',
+//             gap: 3,
+//             justifyContent: 'center',
+//           }}
+//         >
+//           {featureImages.map((item) => (
+//             <Box
+//               key={item.id}
+//               sx={{ width: { xs: '100%', sm: '48%', md: '30%' } }}
+//             >
+//               <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+//                 <CardMedia
+//                   component="img"
+//                   height="200"
+//                   image={item.url}
+//                   alt={item.title}
+//                 />
+//                 <CardContent sx={{ flexGrow: 1 }}>
+//                   <Typography variant="h6" gutterBottom>
+//                     {item.title}
+//                   </Typography>
+//                   <Typography variant="body2" color="text.secondary">
+//                     {item.desc}
+//                   </Typography>
+//                 </CardContent>
+//               </Card>
+//             </Box>
+//           ))}
+//         </Box>
+//       </Container>
+
+//       {/* HOW IT WORKS */}
+     
+//       {/* FEATURES */}
+//       <Container maxWidth="lg" sx={{ py: 6 }}>
+        
+//       </Container>
+
+//       {/* CTA */}
+//       <Box sx={{ backgroundColor: 'rgba(106, 80, 183, 1)', py: 6, mt: 6 }}>
+//         <Container maxWidth="sm">
+//           <Typography variant="h4" align="center" color="white" gutterBottom sx={{color: 'white' }}> 
+//             Ready to Boost Your Grades?
+//           </Typography>
+
+//           <Typography variant="body1" align="center" color="white" sx={{ mb: 3, color: 'white' }}>
+//             Join thousands of students learning smarter with QuizAI.
+//           </Typography>
+
+//           <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+//          <Button
+//   variant="contained"
+//   color="secondary"
+//   size="large"
+//   onClick={() => navigate('/login')}
+//   sx={{ px: 4, py: 1.5, borderRadius: 30 }}
+// >
+//   Start Now
+// </Button>
+//           </Box>
+//         </Container>
+//       </Box>
+//     </>
+//   );
+// };
+
+// export default Home;
+
+
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -236,10 +491,20 @@ import {
   Button,
   Divider,
   Paper,
+  AppBar,
+  Toolbar,
+  IconButton,
+  Drawer,
+  List,
+  ListItem,
+  ListItemText,
+  useScrollTrigger,
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import CloseIcon from '@mui/icons-material/Close';
 import './Home.css';
 // Import the image from assets
-import heroBg from '../assets/img1.jpg';   
+import heroBg from '../assets/img1.jpg';
 
 
 const featureImages = [
@@ -293,13 +558,133 @@ const steps = [
   { number: '4', title: 'Track Growth', desc: 'Monitor your progress over time.' },
 ];
 
+// Nav links map label -> section id
+const navLinks = [
+  { label: 'Home', id: 'home' },
+  { label: 'About QuizAI', id: 'about' },
+  { label: 'Services', id: 'services' },
+];
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Adds a subtle solid background to the navbar once the user scrolls past the hero
+  const trigger = useScrollTrigger({
+    disableHysteresis: true,
+    threshold: 80,
+  });
+
+  const handleNavClick = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setMobileOpen(false);
+  };
+
+  useEffect(() => {
+    // Ensure smooth scrolling works app-wide and accounts for fixed navbar height
+    document.documentElement.style.scrollBehavior = 'smooth';
+    return () => {
+      document.documentElement.style.scrollBehavior = '';
+    };
+  }, []);
 
   return (
     <>
+      {/* ===== NAVIGATION BAR ===== */}
+      <AppBar
+        position="fixed"
+        elevation={trigger ? 4 : 0}
+        className={`navbar ${trigger ? 'navbar-solid' : 'navbar-transparent'}`}
+      >
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', px: { xs: 2, md: 6 } }}>
+          <Typography
+            variant="h5"
+            className="navbar-logo"
+            onClick={() => handleNavClick('home')}
+            sx={{ fontWeight: 800, cursor: 'pointer', letterSpacing: 0.5 }}
+          >
+            Quiz<span className="navbar-logo-accent">AI</span>
+          </Typography>
+
+          {/* Desktop links */}
+          <Box className="navbar-links" sx={{ display: { xs: 'none', md: 'flex' }, gap: 4, alignItems: 'center' }}>
+            {navLinks.map((link) => (
+              <Typography
+                key={link.id}
+                onClick={() => handleNavClick(link.id)}
+                className="navbar-link"
+                sx={{ cursor: 'pointer', fontWeight: 600 }}
+              >
+                {link.label}
+              </Typography>
+            ))}
+            {/* <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => navigate('/login')}
+              sx={{ borderRadius: 30, px: 3, fontWeight: 700 }}
+            >
+              Get Started
+            </Button> */}
+          </Box>
+
+          {/* Mobile menu button */}
+          <IconButton
+            className="navbar-menu-btn"
+            sx={{ display: { xs: 'flex', md: 'none' }, color: trigger ? '#1a237e' : '#fff' }}
+            onClick={() => setMobileOpen(true)}
+            aria-label="open navigation menu"
+          >
+            <MenuIcon />
+          </IconButton>
+        </Toolbar>
+      </AppBar>
+
+      {/* Mobile Drawer */}
+      <Drawer anchor="right" open={mobileOpen} onClose={() => setMobileOpen(false)}>
+        <Box sx={{ width: 260, pt: 2 }} role="presentation">
+          <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, mb: 1 }}>
+            <IconButton onClick={() => setMobileOpen(false)} aria-label="close navigation menu">
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <List>
+            {navLinks.map((link) => (
+              <ListItem
+                key={link.id}
+                onClick={() => handleNavClick(link.id)}
+                sx={{ cursor: 'pointer' }}
+              >
+          <ListItemText
+  primary={link.label}
+  slotProps={{ primary: { sx: { fontWeight: 600 } } }}
+/>
+              </ListItem>
+            ))}
+            <ListItem sx={{ mt: 1 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="secondary"
+                onClick={() => {
+                  setMobileOpen(false);
+                  navigate('/login');
+                }}
+                sx={{ borderRadius: 30, fontWeight: 700 }}
+              >
+                Get Started
+              </Button>
+            </ListItem>
+          </List>
+        </Box>
+      </Drawer>
+
       {/* HERO with background image from assets */}
       <Box
+        id="home"
         className="hero-section"
         sx={{
           backgroundImage: `url(${heroBg})`,
@@ -356,7 +741,7 @@ const Home: React.FC = () => {
 
       <Container maxWidth="lg" sx={{ py: 6 }} className='bits'>
         
-        <Typography variant="h3" align="center" gutterBottom>
+        <Typography id="about" variant="h3" align="center" gutterBottom>
           About QuizAI
         </Typography>
 
@@ -403,7 +788,7 @@ const Home: React.FC = () => {
 
         <Divider sx={{ my: 5 }} />
       </Container>
-<Typography variant="h4" align="center" gutterBottom>
+<Typography id="services" variant="h4" align="center" gutterBottom>
           Key Features
         </Typography>
 

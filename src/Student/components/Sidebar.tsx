@@ -162,9 +162,7 @@
 // };
 
 // export default Sidebar;
-
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Drawer,
@@ -189,6 +187,7 @@ import ChevronLeft from '@mui/icons-material/ChevronLeft';
 import ChevronRight from '@mui/icons-material/ChevronRight';
 
 import { useAuth } from '../../common/contexts/AuthContext';
+import API from '../../common/services/api';
 
 interface SidebarProps {
   open?: boolean;
@@ -209,9 +208,42 @@ const StudentSidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [userData, setUserData] = useState<any>(user);
+  const [loading, setLoading] = useState(true);
 
   const drawerWidth = collapsed ? 72 : width;
+
+  // Fetch fresh user data on mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setLoading(false);
+          return;
+        }
+        const res = await API.get('/auth/me');
+        setUserData(res.data);
+        console.log('📊 User data from sidebar:', res.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!authLoading) {
+      if (user) {
+        setUserData(user);
+        setLoading(false);
+        // Fetch fresh data anyway to get latest grade and image
+        fetchUserData();
+      } else {
+        fetchUserData();
+      }
+    }
+  }, [authLoading]);
 
   const menuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: '/student/dashboard' },
@@ -220,10 +252,26 @@ const StudentSidebar: React.FC<SidebarProps> = ({
     { text: 'Settings', icon: <SettingsIcon />, path: '/student/settings' },
   ];
 
-  const displayName =
-    user ? `${user.FName || ''} ${user.LName || ''}`.trim() : 'Student';
+  // Get display name from user data
+  const displayName = userData
+    ? `${userData.FName || ''} ${userData.LName || ''}`.trim() || 'Student'
+    : 'Student';
 
-  const gradeDisplay = user?.gradeId ? `Grade ${user.gradeId}` : '';
+  // Get grade from user data
+  const gradeDisplay = userData?.gradeId ? `Grade ${userData.gradeId}` : '';
+
+  // ✅ Get profile image from PImage array
+  const profileImage = userData?.PImage && userData.PImage.length > 0 
+    ? userData.PImage[0] 
+    : null;
+
+  // Get avatar initials
+  const getInitials = () => {
+    if (!userData) return 'S';
+    const first = userData.FName?.charAt(0) || '';
+    const last = userData.LName?.charAt(0) || '';
+    return `${first}${last}`.toUpperCase() || 'S';
+  };
 
   const handleNavigate = (path: string) => {
     navigate(path);
@@ -250,7 +298,7 @@ const StudentSidebar: React.FC<SidebarProps> = ({
         }}
       >
         {!collapsed && (
-          <Typography sx={{fontWeight:600, fontSize:14}}>
+          <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
             QuizAI Student
           </Typography>
         )}
@@ -264,20 +312,28 @@ const StudentSidebar: React.FC<SidebarProps> = ({
 
       {/* USER INFO */}
       <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-        {loading ? (
+        {loading || authLoading ? (
           <CircularProgress size={28} sx={{ color: '#7C3AED' }} />
         ) : (
           <>
-            <Avatar sx={{ bgcolor: '#7C3AED' }}>
-              {displayName?.charAt(0)?.toUpperCase() || 'S'}
+            {/* ✅ Avatar with profile image or initials */}
+            <Avatar
+              src={profileImage || undefined}
+              sx={{
+                bgcolor: profileImage ? 'transparent' : '#7C3AED',
+                width: 48,
+                height: 48,
+              }}
+            >
+              {!profileImage && getInitials()}
             </Avatar>
 
             {!collapsed && (
               <Box>
-                <Typography sx={{fontWeight:600, fontSize:14}}>
+                <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
                   {displayName || 'Student'}
                 </Typography>
-                <Typography sx={{fontSize:12, color:"text.secondary"}}>
+                <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
                   {gradeDisplay || 'No grade assigned'}
                 </Typography>
               </Box>
