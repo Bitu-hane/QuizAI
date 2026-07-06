@@ -991,14 +991,14 @@ useEffect(() => {
                 Based on your performance, we suggest you review the topics where you scored below 70%.
                 Practice more and try again.
               </Typography>
-              <Button
+              {/* <Button
                 variant="contained"
                 fullWidth
                 sx={{ mt: 2, bgcolor: 'white', color: '#7C3AED', '&:hover': { bgcolor: '#F5F3FF' } }}
                 onClick={() => navigate('/student/quiz')}
               >
                 Start Recommended Quiz
-              </Button>
+              </Button> */}
             </CardContent>
           </Card>
 
