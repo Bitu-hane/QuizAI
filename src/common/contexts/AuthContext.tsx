@@ -87,7 +87,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const token = localStorage.getItem('token');
     if (token) {
       API.get('/auth/me')
-        .then(res => setUser(res.data))
+// Add type to the .then() callback
+.then((res: { data: User }) => setUser(res.data))
         .catch(() => {
           localStorage.removeItem('token');
           setUser(null);
