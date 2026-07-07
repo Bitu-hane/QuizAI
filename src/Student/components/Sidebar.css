@@ -1,0 +1,180 @@
+/* ===== Sidebar Container ===== */
+.sidebar-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+}
+
+/* ===== Sidebar Header ===== */
+.sidebar-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(27, 36, 48, 0.1);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brand-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #C0392B;
+  box-shadow: 0 0 0 2px rgba(192, 57, 43, 0.15);
+  flex-shrink: 0;
+}
+
+.brand-text {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #1B2430;
+}
+
+.collapse-btn {
+  color: #1B2430;
+  padding: 4px;
+}
+
+.collapse-btn:hover {
+  background: rgba(27, 36, 48, 0.05);
+}
+
+/* ===== User Info ===== */
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 22px 22px;
+  border-bottom: 1px solid rgba(27, 36, 48, 0.12);
+}
+
+.user-avatar {
+  flex-shrink: 0;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 14.5px;
+  color: #1B2430;
+}
+
+.user-grade {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  color: #4B5563;
+}
+
+/* ===== Sidebar Divider ===== */
+.sidebar-divider {
+  border-color: rgba(27, 36, 48, 0.08);
+}
+
+/* ===== Menu List ===== */
+.menu-list {
+  flex: 1;
+  padding: 8px 12px;
+}
+
+.menu-item {
+  border-radius: 5px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  padding: 11px 14px;
+  border-left: 3px solid transparent;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.menu-item:hover {
+  background: #F5F4EF;
+}
+
+.menu-item.active {
+  background: #FBEDEB;
+  border-left-color: #C0392B;
+}
+
+.menu-item.active .menu-text {
+  color: #1B2430;
+  font-weight: 700;
+}
+
+.menu-icon {
+  color: #4B5563;
+  min-width: 40px;
+  transition: color 0.15s ease;
+}
+
+.menu-icon.active {
+  color: #1B2430;
+}
+
+.menu-text {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #4B5563;
+  transition: color 0.15s ease, font-weight 0.15s ease;
+}
+
+.menu-text.active {
+  color: #1B2430;
+  font-weight: 700;
+}
+
+/* ===== Logout ===== */
+.logout-list {
+  padding: 8px 12px 12px;
+}
+
+.logout-item {
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 11px 14px;
+  transition: background 0.15s ease;
+}
+
+.logout-item:hover {
+  background: #FEF2F2;
+}
+
+.logout-icon {
+  color: #C0392B;
+  min-width: 40px;
+}
+
+.logout-text {
+  color: #C0392B;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.logout-text .MuiTypography-root {
+  font-weight: 600;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 600px) {
+  .user-info {
+    padding: 16px 16px 18px;
+  }
+
+  .menu-item {
+    padding: 10px 12px;
+  }
+
+  .menu-text {
+    font-size: 14px;
+  }
+}

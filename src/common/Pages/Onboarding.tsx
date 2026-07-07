@@ -1,19 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Paper,
+  Box,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
   Alert,
   CircularProgress,
+  Paper,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material'; // ✅ type-only import
 import API from '../services/api';
+import './Onboarding.css';
 
 const grades = [6, 7, 8, 9, 10, 11, 12];
 
@@ -23,7 +18,7 @@ const Onboarding: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleGradeChange = (e: SelectChangeEvent<number>) => {
+  const handleGradeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setGrade(Number(e.target.value));
   };
 
@@ -48,49 +43,57 @@ const Onboarding: React.FC = () => {
   };
 
   return (
-    <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, textAlign: 'center' }}>
-          🎉 Welcome!
-        </Typography>
-        <Typography variant="body1" sx={{ textAlign: 'center', mb: 4 }}>
-          Select your grade to personalize your learning experience.
-        </Typography>
+    <Box className="onboarding-page">
+      {/* Notebook paper background */}
+      <Box className="onboarding-bg" />
+      <Box className="onboarding-margin" />
+
+      <Paper className="onboarding-card">
+        {/* Red top bar */}
+        <Box className="card-top-bar" />
+
+        {/* Brand */}
+        <Box className="brand">
+          <svg viewBox="0 0 32 32" fill="none" width="30" height="30">
+            <rect x="4" y="10" width="24" height="16" rx="2" stroke="#1B2430" strokeWidth="2" />
+            <path d="M4 15H28" stroke="#1B2430" strokeWidth="2" />
+            <path d="M9 20L13 24L21 15" stroke="#C0392B" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          <span className="brand-text">Welcome to QuizAI</span>
+        </Box>
+        <Typography className="sub-text">Select your grade to personalize your learning experience.</Typography>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+          <Alert severity="error" className="error-alert" onClose={() => setError('')}>
             {error}
           </Alert>
         )}
 
         <form onSubmit={handleSubmit}>
-          <FormControl fullWidth sx={{ mb: 4 }}>
-            <InputLabel>Your Grade</InputLabel>
-            <Select
+          <div className="field">
+            <label>Your Grade</label>
+            <select
               value={grade}
-              label="Your Grade"
               onChange={handleGradeChange}
               disabled={loading}
+              className="grade-select"
             >
               {grades.map((g) => (
-                <MenuItem key={g} value={g}>Grade {g}</MenuItem>
+                <option key={g} value={g}>Grade {g}</option>
               ))}
-            </Select>
-          </FormControl>
+            </select>
+          </div>
 
-          <Button
-            type="submit"
-            variant="contained"
-            fullWidth
-            size="large"
-            disabled={loading}
-            sx={{ bgcolor: '#7C3AED' }}
-          >
+          <button type="submit" className="btn-primary" disabled={loading}>
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Continue to Dashboard'}
-          </Button>
+          </button>
         </form>
+
+        <p className="footer-link">
+          You can change your grade later in settings.
+        </p>
       </Paper>
-    </Container>
+    </Box>
   );
 };
 

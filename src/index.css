@@ -120,3 +120,61 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+
+
+/* 
+
+body.dark-mode {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+body.dark-mode .MuiPaper-root {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+body.dark-mode .MuiCard-root {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+body.dark-mode .MuiTypography-root {
+  color: #ffffff;
+}
+
+body.dark-mode .MuiTextField-root .MuiInputBase-root {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+body.dark-mode .MuiTextField-root .MuiInputLabel-root {
+  color: #aaaaaa;
+}
+
+body.dark-mode .MuiSelect-root .MuiSelect-select {
+  background-color: #2d2d2d;
+  color: #ffffff;
+}
+
+body.dark-mode .MuiFormLabel-root {
+  color: #aaaaaa;
+}
+
+body.dark-mode .MuiInputLabel-root.Mui-focused {
+  color: #7C3AED;
+}
+
+body.dark-mode .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: #444444;
+}
+
+body.dark-mode .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #666666;
+}
+
+body.dark-mode .MuiFormControlLabel-label {
+  color: #ffffff;
+} */
+

@@ -660,44 +660,27 @@
 // export default ViewReport;
 
 
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  LinearProgress,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
   Chip,
-  Avatar,
-  Button,
-  CircularProgress,
+  LinearProgress,
   Alert,
+  CircularProgress,
 } from '@mui/material';
 import {
   TrendingUp,
   Assignment,
   EmojiEvents,
   AccessTime,
-  Psychology,
-  ArrowBack,
-  School,
   Grade as GradeIcon,
 } from '@mui/icons-material';
 import Layout from '../common/component/layout';
 import StudentSidebar from './components/Sidebar';
 import API from '../common/services/api';
+import './ViewReport.css';
 
-// ===== INTERFACES =====
+// ===== INTERFACES (unchanged) =====
 interface QuizHistoryItem {
   _id: string;
   quizId: number;
@@ -754,7 +737,6 @@ interface ReportData {
   aiInsights: AIInsights;
 }
 
-// Default/Empty data for initial state
 const defaultSummary: SummaryStats = {
   totalQuizzes: 0,
   averageScore: 0,
@@ -788,21 +770,12 @@ const ViewReport: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-
-      // Fetch all report data in parallel
       const [summaryRes, subjectsRes, historyRes, insightsRes] = await Promise.all([
         API.get('/reports/summary'),
         API.get('/reports/subject-performance'),
         API.get('/reports/quiz-history'),
         API.get('/reports/ai-insights'),
       ]);
-
-      console.log('📊 Summary:', summaryRes.data);
-      console.log('📚 Subjects by Grade:', subjectsRes.data);
-      console.log('📝 History:', historyRes.data);
-      console.log('🤖 Insights:', insightsRes.data);
-
-      // Ensure we have valid data with fallbacks
       setReportData({
         summary: summaryRes.data || defaultSummary,
         subjectPerformance: Array.isArray(subjectsRes.data) ? subjectsRes.data : [],
@@ -810,16 +783,13 @@ const ViewReport: React.FC = () => {
         aiInsights: insightsRes.data || defaultAIInsights,
       });
     } catch (err: any) {
-      console.error('❌ Error fetching report data:', err);
-      console.error('📦 Response data:', err.response?.data);
-      console.error('📦 Status code:', err.response?.status);
-      setError(err.response?.data?.message || 'Failed to load report data. Please try again.');
+      console.error('Error fetching report data:', err);
+      setError(err.response?.data?.message || 'Failed to load report data.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Format time
   const formatTime = (minutes: number) => {
     if (minutes < 60) return `${minutes}m`;
     const hours = Math.floor(minutes / 60);
@@ -827,13 +797,14 @@ const ViewReport: React.FC = () => {
     return `${hours}h ${mins}m`;
   };
 
+  // ----- Loading / Error -----
   if (loading) {
     return (
       <Layout title="Reports" sidebar={<StudentSidebar />}>
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+        <div className="report-loading">
           <CircularProgress sx={{ color: '#7C3AED' }} />
-          <Typography sx={{ mt: 2, color: '#64748B' }}>Loading your reports...</Typography>
-        </Box>
+          <p>Loading your reports...</p>
+        </div>
       </Layout>
     );
   }
@@ -841,12 +812,10 @@ const ViewReport: React.FC = () => {
   if (error) {
     return (
       <Layout title="Reports" sidebar={<StudentSidebar />}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-        <Button variant="contained" onClick={fetchReportData} sx={{ bgcolor: '#7C3AED' }}>
-          Retry
-        </Button>
+        <div className="report-error">
+          <Alert severity="error">{error}</Alert>
+          <button className="quiz-btn-outline" onClick={fetchReportData}>Retry</button>
+        </div>
       </Layout>
     );
   }
@@ -859,327 +828,216 @@ const ViewReport: React.FC = () => {
     );
   }
 
-  // Safe destructuring with fallbacks
   const summary = reportData.summary || defaultSummary;
   const subjectPerformance = Array.isArray(reportData.subjectPerformance) ? reportData.subjectPerformance : [];
   const quizHistory = Array.isArray(reportData.quizHistory) ? reportData.quizHistory : [];
   const aiInsights = reportData.aiInsights || defaultAIInsights;
 
-  // Calculate summary stats for display
-  const summaryStats = [
-    { 
-      title: 'Total Quizzes', 
-      value: summary.totalQuizzes?.toString() || '0', 
-      icon: <Assignment sx={{ color: '#7C3AED' }} />, 
-      bgColor: '#F5F3FF' 
+  // ---- stats cards ----
+  const stats = [
+    {
+      label: 'Total Quizzes',
+      value: summary.totalQuizzes?.toString() || '0',
+      icon: <Assignment sx={{ color: '#C0392B' }} />,
+      iconClass: 'ic-red',
     },
-    { 
-      title: 'Average Score', 
-      value: `${Math.round(summary.averageScore || 0)}%`, 
-      icon: <TrendingUp sx={{ color: '#10B981' }} />, 
-      bgColor: '#ECFDF5' 
+    {
+      label: 'Average Score',
+      value: `${Math.round(summary.averageScore || 0)}%`,
+      icon: <TrendingUp sx={{ color: '#2E7D52' }} />,
+      iconClass: 'ic-green',
     },
-    { 
-      title: 'Best Score', 
-      value: `${Math.round(summary.bestScore || 0)}%`, 
-      icon: <EmojiEvents sx={{ color: '#F59E0B' }} />, 
-      bgColor: '#FFFBEB' 
+    {
+      label: 'Best Score',
+      value: `${Math.round(summary.bestScore || 0)}%`,
+      icon: <EmojiEvents sx={{ color: '#C99A2E' }} />,
+      iconClass: 'ic-gold',
     },
-    { 
-      title: 'Total Time', 
-      value: formatTime(summary.totalTimeSpent || 0), 
-      icon: <AccessTime sx={{ color: '#3B82F6' }} />, 
-      bgColor: '#EFF6FF' 
+    {
+      label: 'Total Time',
+      value: formatTime(summary.totalTimeSpent || 0),
+      icon: <AccessTime sx={{ color: '#3B6EA5' }} />,
+      iconClass: 'ic-blue',
     },
   ];
 
   return (
     <Layout title="Reports" sidebar={<StudentSidebar />}>
-      {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Typography variant="h4" sx={{ fontWeight: 700, color: '#1A202C' }}>
-            📊 Performance Reports
-          </Typography>
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate('/student/dashboard')}
-            sx={{ color: '#7C3AED' }}
-          >
-            Back to Dashboard
-          </Button>
-        </Box>
-        <Typography variant="body1" sx={{ color: '#475569', mt: 1 }}>
-          Detailed analysis of your quiz performance across all grades.
-        </Typography>
-        
-        {/* Show grades studied */}
-        {summary.gradesStudied && summary.gradesStudied.length > 0 && (
-          <Box sx={{ mt: 2, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-            <Typography variant="body2" sx={{ fontWeight: 600, color: '#64748B' }}>
-              Grades studied:
-            </Typography>
-            {summary.gradesStudied.map((g) => (
-              <Chip
-                key={g.gradeId}
-                label={`Grade ${g.level}`}
-                size="small"
-                sx={{ bgcolor: '#F5F3FF', color: '#7C3AED' }}
-              />
-            ))}
-          </Box>
-        )}
-      </Box>
+      <div className="report-content">
+     
+        <div className="page-head">
+          <div className="head-left">
+            <div className="page-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M4 20V4M4 20H20" stroke="#C0392B" strokeWidth="1.8" strokeLinecap="round" />
+                <rect x="7" y="13" width="2.6" height="5" fill="#C0392B" />
+                <rect x="11.7" y="9" width="2.6" height="9" fill="#C0392B" />
+                <rect x="16.4" y="6" width="2.6" height="12" fill="#C0392B" />
+              </svg>
+            </div>
+            <h1>Performance Reports</h1>
+          </div>
+          <a className="back-link" onClick={() => navigate('/student/dashboard')}>← BACK TO DASHBOARD</a>
+        </div>
+        <p className="sub">Detailed analysis of your quiz performance across all grades.</p>
 
-      {/* Summary Stats */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {summaryStats.map((stat, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 6, md: 3 }}>
-            <Card sx={{ borderRadius: 3, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Box>
-                    <Typography variant="body2" sx={{ color: '#64748B', fontWeight: 500 }}>
-                      {stat.title}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: '#1A202C', mt: 1 }}>
-                      {stat.value}
-                    </Typography>
-                  </Box>
-                  <Avatar sx={{ bgcolor: stat.bgColor, width: 48, height: 48, borderRadius: 2 }}>
-                    {stat.icon}
-                  </Avatar>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+ 
+        <div className="stats">
+          {stats.map((stat, idx) => (
+            <div className="stat-card" key={idx}>
+              <div className="stat-top">
+                <span className="stat-label">{stat.label}</span>
+                <div className={`stat-icon ${stat.iconClass}`}>{stat.icon}</div>
+              </div>
+              <div className="stat-num">{stat.value}</div>
+            </div>
+          ))}
+        </div>
 
-      {/* Subject Performance by Grade */}
-      <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A202C', mb: 2 }}>
-        Subject Performance by Grade
-      </Typography>
-      
-      {!subjectPerformance || subjectPerformance.length === 0 ? (
-        <Card sx={{ borderRadius: 3, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', mb: 4 }}>
-          <CardContent>
-            <Typography color="text.secondary">No subject data available yet. Take some quizzes!</Typography>
-          </CardContent>
-        </Card>
-      ) : (
-        subjectPerformance.map((gradeData) => (
-          <Card key={gradeData.gradeId} sx={{ borderRadius: 3, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', mb: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+
+        <h3 className="section">Subject Performance by Grade</h3>
+        {!subjectPerformance || subjectPerformance.length === 0 ? (
+          <div className="panel">
+            <div className="empty">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                <path d="M4 19L4.6 15.6L15 5L19 9L8.6 19.4L4 19Z" stroke="#9AA3AE" strokeWidth="1.6" strokeLinejoin="round" />
+              </svg>
+              No subject data available yet. Take some quizzes!
+            </div>
+          </div>
+        ) : (
+          subjectPerformance.map((gradeData) => (
+            <div className="panel" key={gradeData.gradeId}>
+              <div className="grade-header">
                 <GradeIcon sx={{ color: '#7C3AED' }} />
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#1A202C' }}>
-                  Grade {gradeData.gradeLevel}
-                </Typography>
+                <h4>Grade {gradeData.gradeLevel}</h4>
                 <Chip
                   label={`Avg: ${Math.round(gradeData.averageScore || 0)}%`}
                   size="small"
-                  sx={{ 
-                    bgcolor: (gradeData.averageScore || 0) >= 70 ? '#ECFDF5' : '#FEF2F2',
-                    color: (gradeData.averageScore || 0) >= 70 ? '#10B981' : '#EF4444',
+                  sx={{
+                    bgcolor: (gradeData.averageScore || 0) >= 70 ? '#E9F3EC' : '#FBEDEB',
+                    color: (gradeData.averageScore || 0) >= 70 ? '#2E7D52' : '#C0392B',
                   }}
                 />
-              </Box>
-              <Grid container spacing={2}>
-                {gradeData.subjects && gradeData.subjects.length > 0 ? (
-                  gradeData.subjects.map((subject) => (
-                    <Grid key={subject.subjectId} size={{ xs: 12, md: 6 }}>
-                      <Box sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                          <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 600, color: '#1A202C' }}>
-                              {subject.name || 'Unknown Subject'}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {subject.totalQuizzes || 0} quizzes
-                            </Typography>
-                          </Box>
-                          <Box sx={{ textAlign: 'right' }}>
-                            <Typography variant="body2" sx={{ fontWeight: 700, color: '#7C3AED' }}>
-                              {Math.round(subject.averageScore || 0)}%
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              Best: {Math.round(subject.bestScore || 0)}%
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={subject.progress || 0}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            bgcolor: '#F5F3FF',
-                            '& .MuiLinearProgress-bar': {
-                              borderRadius: 4,
-                              background: (subject.progress || 0) >= 70 
-                                ? 'linear-gradient(90deg, #7C3AED, #8B5CF6)' 
-                                : 'linear-gradient(90deg, #F59E0B, #F97316)',
-                            },
-                          }}
-                        />
-                      </Box>
-                    </Grid>
-                  ))
-                ) : (
-                  <Typography color="text.secondary" sx={{ p: 2 }}>
-                    No subjects available for this grade yet.
-                  </Typography>
-                )}
-              </Grid>
-            </CardContent>
-          </Card>
-        ))
-      )}
+              </div>
+              <div className="subject-grid">
+                {gradeData.subjects?.map((subj) => (
+                  <div className="subject-row" key={subj.subjectId}>
+                    <span>{subj.name}</span>
+                    <div className="subject-stats">
+                      <span>{Math.round(subj.averageScore || 0)}%</span>
+                      <LinearProgress
+                        variant="determinate"
+                        value={subj.progress || 0}
+                        sx={{
+                          width: 120,
+                          height: 6,
+                          borderRadius: 3,
+                          bgcolor: '#F1F1EF',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 3,
+                            background: (subj.progress || 0) >= 70
+                              ? 'linear-gradient(90deg, #7C3AED, #8B5CF6)'
+                              : 'linear-gradient(90deg, #F59E0B, #F97316)',
+                          },
+                        }}
+                      />
+                      <span className="best-score">Best: {Math.round(subj.bestScore || 0)}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))
+        )}
 
-      {/* Quiz History */}
-      <Card sx={{ borderRadius: 3, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)', mb: 4 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A202C' }} gutterBottom>
-            Recent Quiz History
-          </Typography>
+  
+        <h3 className="section">Recent Quiz History</h3>
+        <div className="panel">
           {!quizHistory || quizHistory.length === 0 ? (
-            <Typography color="text.secondary">No quizzes taken yet.</Typography>
+            <div className="empty">
+              <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="3" width="14" height="18" rx="1.5" stroke="#9AA3AE" strokeWidth="1.6" strokeDasharray="3 3" />
+              </svg>
+              No quizzes taken yet.
+            </div>
           ) : (
-            <TableContainer component={Paper} elevation={0} sx={{ borderRadius: 2 }}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ bgcolor: '#F5F3FF' }}>
-                    <TableCell>Date</TableCell>
-                    <TableCell>Grade</TableCell>
-                    <TableCell>Subject</TableCell>
-                    <TableCell>Lesson</TableCell>
-                    <TableCell align="center">Score</TableCell>
-                    <TableCell align="center">Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {quizHistory.map((row) => (
-                    <TableRow key={row._id} hover>
-                      <TableCell>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'}</TableCell>
-                      <TableCell>Grade {row.grade || 'N/A'}</TableCell>
-                      <TableCell>{row.subject || 'Unknown'}</TableCell>
-                      <TableCell>{row.lesson || 'Unknown'}</TableCell>
-                      <TableCell align="center">
-                        <Typography
-                          variant="body2"
-                          sx={{ fontWeight: 700, color: row.status === 'Passed' ? '#10B981' : '#EF4444' }}
-                        >
-                          {Math.round(row.percentage || 0)}%
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={row.status || 'Unknown'}
-                          size="small"
-                          sx={{
-                            bgcolor: row.status === 'Passed' ? '#ECFDF5' : '#FEF2F2',
-                            color: row.status === 'Passed' ? '#10B981' : '#EF4444',
-                          }}
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <div className="history-table">
+              <div className="history-head">
+                <span>Date</span>
+                <span>Grade</span>
+                <span>Subject</span>
+                <span>Lesson</span>
+                <span style={{ textAlign: 'center' }}>Score</span>
+                <span style={{ textAlign: 'center' }}>Status</span>
+              </div>
+              {quizHistory.map((row) => (
+                <div className="history-row" key={row._id}>
+                  <span>{row.createdAt ? new Date(row.createdAt).toLocaleDateString() : 'N/A'}</span>
+                  <span>Grade {row.grade || 'N/A'}</span>
+                  <span>{row.subject || 'Unknown'}</span>
+                  <span>{row.lesson || 'Unknown'}</span>
+                  <span className={`score ${row.status === 'Passed' ? 'passed' : 'failed'}`}>
+                    {Math.round(row.percentage || 0)}%
+                  </span>
+                  <span className={`status ${row.status === 'Passed' ? 'passed' : 'failed'}`}>
+                    {row.status || 'Unknown'}
+                  </span>
+                </div>
+              ))}
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* AI Insights */}
-      <Card sx={{ borderRadius: 3, boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-            <Psychology sx={{ color: '#7C3AED' }} />
-            <Typography variant="h6" sx={{ fontWeight: 700, color: '#1A202C' }}>
-              AI Learning Insights
-            </Typography>
-          </Box>
-          
-          <Typography variant="body1" sx={{ color: '#475569', mb: 2 }}>
-            {aiInsights.summary || 'Complete more quizzes to receive personalized insights.'}
-          </Typography>
-          
+
+        <div className="ai-card">
+          <div className="ai-head">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M9 18H15M10 21H14" stroke="#E8735F" strokeWidth="1.7" strokeLinecap="round" />
+              <path d="M12 3C8.5 3 6 5.7 6 9C6 11.5 7.3 13 8.3 14C9 14.7 9 15.3 9 16H15C15 15.3 15 14.7 15.7 14C16.7 13 18 11.5 18 9C18 5.7 15.5 3 12 3Z" stroke="#E8735F" strokeWidth="1.7" strokeLinejoin="round" />
+            </svg>
+            <h3>AI Learning Insights</h3>
+          </div>
+          <p>{aiInsights.summary}</p>
           {aiInsights.nextSteps && (
-            <Typography variant="body2" sx={{ color: '#7C3AED', fontWeight: 500, mb: 2 }}>
-              📌 {aiInsights.nextSteps}
-            </Typography>
+            <div className="pin-note">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L14 9L21 10L16 15L17 22L12 18.5L7 22L8 15L3 10L10 9L12 2Z" stroke="#F3B7AE" strokeWidth="1.4" strokeLinejoin="round" />
+              </svg>
+              {aiInsights.nextSteps}
+            </div>
           )}
-
-          {aiInsights.gradeRecommendations && aiInsights.gradeRecommendations.length > 0 && (
-            <Box sx={{ mt: 2, mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#7C3AED' }}>
-                🎯 Ready for Next Grade
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {aiInsights.gradeRecommendations.map((item) => (
-                  <Chip 
-                    key={item} 
-                    label={item} 
-                    sx={{ bgcolor: '#F5F3FF', color: '#7C3AED' }}
-                    icon={<School sx={{ fontSize: 16 }} />}
-                  />
-                ))}
-              </Box>
-            </Box>
-          )}
-
-          {(aiInsights.strengths && aiInsights.strengths.length > 0 || 
-            aiInsights.weaknesses && aiInsights.weaknesses.length > 0) && (
-            <Box sx={{ mt: 2 }}>
-              {aiInsights.strengths && aiInsights.strengths.length > 0 && (
-                <>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#10B981' }}>
-                    Strengths
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    {aiInsights.strengths.map((item) => (
-                      <Chip key={item} label={item} sx={{ bgcolor: '#ECFDF5', color: '#10B981' }} />
+          {(aiInsights.strengths?.length > 0 || aiInsights.weaknesses?.length > 0) && (
+            <div className="ai-tags">
+              {aiInsights.strengths?.length > 0 && (
+                <div>
+                  <span style={{ fontWeight: 600, color: '#2E7D52' }}>Strengths:</span>
+                  <div className="tag-group">
+                    {aiInsights.strengths.map((s) => (
+                      <Chip key={s} label={s} size="small" sx={{ bgcolor: '#E9F3EC', color: '#2E7D52' }} />
                     ))}
-                  </Box>
-                </>
+                  </div>
+                </div>
               )}
-              
-              {aiInsights.weaknesses && aiInsights.weaknesses.length > 0 && (
-                <>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#EF4444' }}>
-                    Areas to Improve
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {aiInsights.weaknesses.map((item) => (
-                      <Chip key={item} label={item} sx={{ bgcolor: '#FEF2F2', color: '#EF4444' }} />
+              {aiInsights.weaknesses?.length > 0 && (
+                <div>
+                  <span style={{ fontWeight: 600, color: '#C0392B' }}>Areas to Improve:</span>
+                  <div className="tag-group">
+                    {aiInsights.weaknesses.map((w) => (
+                      <Chip key={w} label={w} size="small" sx={{ bgcolor: '#FBEDEB', color: '#C0392B' }} />
                     ))}
-                  </Box>
-                </>
+                  </div>
+                </div>
               )}
-            </Box>
+            </div>
           )}
-
-          {aiInsights.recommendedLessons && aiInsights.recommendedLessons.length > 0 && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 600, color: '#7C3AED' }}>
-                Recommended Lessons
-              </Typography>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {aiInsights.recommendedLessons.map((item) => (
-                  <Chip 
-                    key={item} 
-                    label={item} 
-                    sx={{ bgcolor: '#F5F3FF', color: '#7C3AED' }}
-                    icon={<School sx={{ fontSize: 16 }} />}
-                  />
-                ))}
-              </Box>
-            </Box>
+          {aiInsights.gradeRecommendations?.length > 0 && (
+            <div className="pin-note" style={{ marginTop: '12px' }}>
+              🎯 Ready for next grade: {aiInsights.gradeRecommendations.join(', ')}
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Layout>
   );
 };

@@ -638,30 +638,20 @@
 // };
 
 // export default Signup;
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Paper,
-  Typography,
   Box,
-  TextField,
-  Button,
-  Divider,
+  Typography,
   Alert,
   CircularProgress,
-  IconButton,
-  InputAdornment,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Paper,
 } from '@mui/material';
-import type { SelectChangeEvent } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import type { CredentialResponse } from '@react-oauth/google';
 import API from '../common/services/api';
+import './Signup.css';
 
 const Signup: React.FC = () => {
   const navigate = useNavigate();
@@ -676,7 +666,7 @@ const Signup: React.FC = () => {
     FName: '',
     MName: '',
     LName: '',
-    gender: 'male',
+    gender: 'female',
     dateOfBirth: '',
     email: '',
     password: '',
@@ -706,17 +696,12 @@ const Signup: React.FC = () => {
     }
   };
 
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (name === 'dateOfBirth') {
       validateDateOfBirth(value);
     }
-  };
-
-  const handleSelectChange = (e: SelectChangeEvent<string | number>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name as string]: value }));
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -785,166 +770,178 @@ const Signup: React.FC = () => {
 
   return (
     <GoogleOAuthProvider clientId={clientId || ''}>
-      <Container maxWidth="sm" sx={{ mt: 4 }}>
-        <Paper
-          elevation={3}
-          sx={{
-            p: 4,
-            borderRadius: 3,
-            bgcolor: 'white',
-            boxShadow: '0 8px 40px rgba(0,0,0,0.08)',
-          }}
-        >
-          <Box sx={{ textAlign: 'center', mb: 3 }}>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1A202C' }}>
-              📚 Create Account
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#64748B', mt: 1 }}>
-              Start your learning journey today
-            </Typography>
+      <Box className="signup-page">
+        {/* Notebook paper background */}
+        <Box className="signup-bg" />
+        <Box className="signup-margin" />
+
+        <Paper className="signup-card">
+          {/* Red top bar */}
+          <Box className="card-top-bar" />
+
+          {/* Brand */}
+          <Box className="brand">
+            <svg viewBox="0 0 32 32" fill="none" width="30" height="30">
+              <rect x="4" y="10" width="24" height="16" rx="2" stroke="#1B2430" strokeWidth="2" />
+              <path d="M4 15H28" stroke="#1B2430" strokeWidth="2" />
+              <path d="M9 20L13 24L21 15" stroke="#C0392B" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            <span className="brand-text">Create Account</span>
           </Box>
+          <Typography className="sub-text">Start your learning journey today</Typography>
 
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+            <Alert severity="error" className="error-alert" onClose={() => setError('')}>
               {error}
             </Alert>
           )}
 
           <form onSubmit={handleSignup}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
-              <TextField
-                label="First Name"
-                name="FName"
-                value={formData.FName}
-                onChange={handleTextChange}
-                required
-                fullWidth
-                disabled={loading}
-                size="small"
-              />
-              <TextField
-                label="Middle Name"
-                name="MName"
-                value={formData.MName}
-                onChange={handleTextChange}
-                fullWidth
-                disabled={loading}
-                size="small"
-              />
-              <TextField
-                label="Last Name"
-                name="LName"
-                value={formData.LName}
-                onChange={handleTextChange}
-                required
-                fullWidth
-                disabled={loading}
-                size="small"
-              />
-              <FormControl fullWidth size="small" disabled={loading}>
-                <InputLabel>Gender</InputLabel>
-                <Select
+            {/* Row 1: First Name + Middle Name */}
+            <div className="grid2">
+              <div className="field">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  name="FName"
+                  placeholder="Bitanya"
+                  value={formData.FName}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="field">
+                <label>Middle Name</label>
+                <input
+                  type="text"
+                  name="MName"
+                  placeholder="Optional"
+                  value={formData.MName}
+                  onChange={handleInputChange}
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Last Name + Gender */}
+            <div className="grid2">
+              <div className="field">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  name="LName"
+                  placeholder="Moges"
+                  value={formData.LName}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="field">
+                <label>Gender</label>
+                <select
                   name="gender"
                   value={formData.gender}
-                  label="Gender"
-                  onChange={handleSelectChange}
+                  onChange={handleInputChange}
+                  disabled={loading}
                 >
-                  <MenuItem value="male">Male</MenuItem>
-                  <MenuItem value="female">Female</MenuItem>
-                </Select>
-              </FormControl>
+                  <option value="female">Female</option>
+                  <option value="male">Male</option>
+                  <option value="prefer-not-to-say">Prefer not to say</option>
+                </select>
+              </div>
+            </div>
 
-              {/* ✅ FIXED DATE FIELD – using slotProps.htmlInput */}
-              <TextField
-                label="Date of Birth"
-                name="dateOfBirth"
+            {/* Row 3: Date of Birth (Full width) */}
+            <div className="field">
+              <label>Date of Birth</label>
+              <input
                 type="date"
+                name="dateOfBirth"
                 value={formData.dateOfBirth}
-                onChange={handleTextChange}
+                onChange={handleInputChange}
+                max={maxDateString}
                 required
-                fullWidth
                 disabled={loading}
-                size="small"
-                error={!!dateError}
-                helperText={dateError || `Must be at least ${minAge} years old`}
-                slotProps={{
-                  inputLabel: { shrink: true },      // ✅ Shrink label
-                  htmlInput: { max: maxDateString }, // ✅ Native max attribute
-                }}
-                sx={{ gridColumn: { xs: '1', sm: 'span 2' } }}
               />
+            </div>
 
-              <TextField
-                label="Email"
-                name="email"
+            {/* Date hint */}
+            <div className="date-hint">{dateError || 'Must be at least 8 years old'}</div>
+
+            {/* Email */}
+            <div className="field">
+              <label>Email</label>
+              <input
                 type="email"
+                name="email"
+                placeholder="you@example.com"
                 value={formData.email}
-                onChange={handleTextChange}
+                onChange={handleInputChange}
                 required
-                fullWidth
                 disabled={loading}
-                size="small"
-                sx={{ gridColumn: { xs: '1', sm: 'span 2' } }}
               />
-              <TextField
-                label="Password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.password}
-                onChange={handleTextChange}
-                required
-                fullWidth
-                disabled={loading}
-                size="small"
-                slotProps={{
-                  input: {
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  },
-                }}
-              />
-              <TextField
-                label="Confirm Password"
-                name="confirmPassword"
-                type={showPassword ? 'text' : 'password'}
-                value={formData.confirmPassword}
-                onChange={handleTextChange}
-                required
-                fullWidth
-                disabled={loading}
-                size="small"
-              />
-            </Box>
+            </div>
 
-            <Button
-              type="submit"
-              variant="contained"
-              fullWidth
-              size="large"
-              disabled={loading}
-              sx={{
-                mt: 3,
-                py: 1.5,
-                bgcolor: '#7C3AED',
-                '&:hover': { bgcolor: '#6D28D9' },
-                borderRadius: 2,
-                fontWeight: 600,
-              }}
-            >
+            {/* Row 4: Password + Confirm Password */}
+            <div className="grid2">
+              <div className="field">
+                <label>Password</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="********"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="toggle-eye"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label="Show password"
+                >
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none">
+                    <path d="M2 12C2 12 5.5 5.5 12 5.5C18.5 5.5 22 12 22 12C22 12 18.5 18.5 12 18.5C5.5 18.5 2 12 2 12Z" stroke="currentColor" strokeWidth="1.6" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+                  </svg>
+                </button>
+              </div>
+              <div className="field">
+                <label>Confirm Password</label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  placeholder="********"
+                  value={formData.confirmPassword}
+                  onChange={handleInputChange}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign Up'}
-            </Button>
+            </button>
           </form>
 
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Divider sx={{ mb: 2 }}>OR</Divider>
+          <div className="divider">OR</div>
+
+          <button className="btn-google" onClick={() => { /* Google login triggers via the GoogleLogin component below */ }}>
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.85C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.05H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.95l2.85-2.86z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.05l3.66 2.85c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            Continue with Google
+          </button>
+
+          {/* Hidden GoogleLogin component */}
+          <Box sx={{ display: 'none' }}>
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleError}
@@ -955,25 +952,11 @@ const Signup: React.FC = () => {
             />
           </Box>
 
-          <Box sx={{ mt: 3, textAlign: 'center' }}>
-            <Typography variant="body2" sx={{ color: '#64748B' }}>
-              Already have an account?{' '}
-              <Button
-                variant="text"
-                sx={{
-                  color: '#7C3AED',
-                  fontWeight: 600,
-                  textTransform: 'none',
-                  '&:hover': { bgcolor: 'transparent', textDecoration: 'underline' },
-                }}
-                onClick={() => navigate('/login')}
-              >
-                Log In
-              </Button>
-            </Typography>
-          </Box>
+          <p className="footer-link">
+            Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); navigate('/login'); }}>Log In</a>
+          </p>
         </Paper>
-      </Container>
+      </Box>
     </GoogleOAuthProvider>
   );
 };

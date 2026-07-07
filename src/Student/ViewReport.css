@@ -1,0 +1,395 @@
+/* ===== Report Content ===== */
+.report-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ===== Loading / Error ===== */
+.report-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+}
+
+.report-loading p {
+  margin-top: 1rem;
+  font-size: 14px;
+  color: #4B5563;
+}
+
+.report-error {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.report-error .quiz-btn-outline {
+  margin-top: 1rem;
+}
+
+/* ===== Page Head ===== */
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.head-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.page-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  background: #FBEDEB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.page-head h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(26px, 3.4vw, 32px);
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #1B2430;
+}
+
+.back-link {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #C0392B;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  margin-top: 12px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+p.sub {
+  margin: 6px 0 30px 60px;
+  color: #4B5563;
+  font-size: 15px;
+}
+
+/* ===== Stats ===== */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin-bottom: 26px;
+}
+
+@media (max-width: 900px) {
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid rgba(27, 36, 48, 0.12);
+  border-radius: 7px;
+  padding: 22px;
+}
+
+.stat-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.stat-label {
+  font-size: 13.5px;
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ic-red {
+  background: #FBEDEB;
+  color: #C0392B;
+}
+.ic-green {
+  background: #E9F3EC;
+  color: #2E7D52;
+}
+.ic-blue {
+  background: #EAF0F6;
+  color: #3B6EA5;
+}
+.ic-gold {
+  background: #FBF3E2;
+  color: #C99A2E;
+}
+
+.stat-num {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 700;
+  color: #1B2430;
+}
+
+/* ===== Sections ===== */
+h3.section {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 19px;
+  margin: 0 0 16px;
+  font-weight: 700;
+  color: #1B2430;
+}
+
+.panel {
+  background: #fff;
+  border: 1px solid rgba(27, 36, 48, 0.12);
+  border-radius: 7px;
+  padding: 26px;
+  margin-bottom: 20px;
+}
+
+/* ===== Empty State ===== */
+.empty {
+  border: 1.5px dashed rgba(27, 36, 48, 0.12);
+  border-radius: 6px;
+  padding: 26px;
+  text-align: center;
+  color: #4B5563;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== Subject Performance ===== */
+.grade-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.grade-header h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  margin: 0;
+  color: #1B2430;
+}
+
+.subject-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subject-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(27, 36, 48, 0.06);
+}
+
+.subject-row:last-child {
+  border-bottom: none;
+}
+
+.subject-row span:first-child {
+  font-weight: 500;
+  font-size: 14px;
+  color: #1B2430;
+  min-width: 120px;
+}
+
+.subject-stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.subject-stats span:first-child {
+  font-weight: 700;
+  color: #7C3AED;
+  min-width: 50px;
+}
+
+.best-score {
+  font-size: 13px;
+  color: #4B5563;
+}
+
+/* ===== History Table ===== */
+.history-table {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.history-head {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 1.2fr 1.2fr 0.6fr 0.6fr;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: #4B5563;
+  text-transform: uppercase;
+  padding: 8px 0 12px;
+  border-bottom: 1px solid rgba(27, 36, 48, 0.08);
+}
+
+.history-head span {
+  padding: 0 4px;
+}
+
+.history-row {
+  display: grid;
+  grid-template-columns: 1fr 0.8fr 1.2fr 1.2fr 0.6fr 0.6fr;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(27, 36, 48, 0.04);
+  font-size: 14px;
+}
+
+.history-row:last-child {
+  border-bottom: none;
+}
+
+.history-row span {
+  padding: 0 4px;
+}
+
+.score {
+  font-weight: 700;
+  text-align: center;
+}
+.score.passed {
+  color: #2E7D52;
+}
+.score.failed {
+  color: #C0392B;
+}
+
+.status {
+  font-weight: 600;
+  font-size: 12px;
+  text-align: center;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+.status.passed {
+  color: #2E7D52;
+  background: #E9F3EC;
+}
+.status.failed {
+  color: #C0392B;
+  background: #FBEDEB;
+}
+
+/* ===== AI Card ===== */
+.ai-card {
+  background: #1B2430;
+  color: #FBFAF6;
+  border-radius: 7px;
+  padding: 26px;
+}
+
+.ai-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.ai-head h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  margin: 0;
+  font-weight: 700;
+}
+
+.ai-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #C7CDD6;
+  margin: 0 0 14px;
+}
+
+.pin-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #F3B7AE;
+  font-weight: 600;
+}
+
+.ai-tags {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tag-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 700px) {
+  .page-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .back-link {
+    margin-top: 0;
+    align-self: flex-start;
+  }
+  p.sub {
+    margin-left: 0;
+  }
+  .history-head,
+  .history-row {
+    grid-template-columns: 0.8fr 0.6fr 1fr 1fr 0.5fr 0.6fr;
+    font-size: 12px;
+  }
+  .subject-row {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .subject-stats {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

@@ -352,55 +352,31 @@
 // };
 
 // export default QuizAttempt;
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import API from '../common/services/api';
-
 import {
-  Box,
-  Container,
-  Typography,
-  Paper,
   Radio,
   RadioGroup,
   FormControlLabel,
-  LinearProgress,
-  Button,
   Chip,
   Alert,
   TextField,
   FormControl,
-  Grid,
-  Divider,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Card,
-  CardContent,
 } from '@mui/material';
-import {
-  Timer,
-  CheckCircle,
-  Cancel,
-  ExpandMore,
-  Lightbulb,
-  TrendingUp,
-  TrendingDown,
-  School,
-} from '@mui/icons-material';
+import { Timer } from '@mui/icons-material';
 import Layout from '../common/component/layout';
 import StudentSidebar from './components/Sidebar';
+import API from '../common/services/api';
+import './AttemptQuiz.css';
 
+// ----- Types (unchanged) -----
 interface Question {
   questionId: number;
   question: string;
   options: string[] | string;
   topic?: string;
   explanation?: string;
-  correctAnswer?: string; // ✅ Added this
+  correctAnswer?: string;
 }
 
 interface QuizData {
@@ -435,10 +411,12 @@ interface QuizResult {
   quizTitle: string;
 }
 
+// ----- Component -----
 const QuizAttempt: React.FC = () => {
   const { lessonId } = useParams<{ lessonId: string }>();
   const navigate = useNavigate();
 
+  // ----- State (exactly as before) -----
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
@@ -449,6 +427,7 @@ const QuizAttempt: React.FC = () => {
   const [result, setResult] = useState<QuizResult | null>(null);
   const [showExplanations, setShowExplanations] = useState(false);
 
+  // ----- Effects (unchanged) -----
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -472,7 +451,6 @@ const QuizAttempt: React.FC = () => {
     fetchQuiz();
   }, [lessonId]);
 
-  // Timer effect
   useEffect(() => {
     if (timeLeft !== null && timeLeft > 0 && !quizSubmitted) {
       const timer = setInterval(() => {
@@ -489,103 +467,102 @@ const QuizAttempt: React.FC = () => {
     }
   }, [timeLeft, quizSubmitted]);
 
+  // ----- Handlers (unchanged) -----
   const handleAnswer = (questionId: number, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
- const handleSubmitQuiz = async () => {
-  if (!quizData) return;
-  
-  const totalQuestions = quizData.quiz.questions.length;
-  const answeredCount = Object.keys(answers).length;
-  
-  if (answeredCount < totalQuestions && (timeLeft === null || timeLeft > 0)) {
-    if (!window.confirm(`You've answered ${answeredCount}/${totalQuestions} questions. Submit anyway?`)) {
-      return;
+  const handleSubmitQuiz = async () => {
+    if (!quizData) return;
+    const totalQuestions = quizData.quiz.questions.length;
+    const answeredCount = Object.keys(answers).length;
+    if (answeredCount < totalQuestions && (timeLeft === null || timeLeft > 0)) {
+      if (!window.confirm(`You've answered ${answeredCount}/${totalQuestions} questions. Submit anyway?`)) {
+        return;
+      }
     }
-  }
 
-  const payload = {
-    quizId: quizData.quiz.quizId,
-    answers: Object.entries(answers).map(([qId, ans]) => ({
-      questionId: Number(qId),
-      selectedAnswer: ans,
-    })),
-    timeTaken: quizData.timelimit ? (quizData.timelimit * 60 - (timeLeft || 0)) : 0,
+    const payload = {
+      quizId: quizData.quiz.quizId,
+      answers: Object.entries(answers).map(([qId, ans]) => ({
+        questionId: Number(qId),
+        selectedAnswer: ans,
+      })),
+      timeTaken: quizData.timelimit ? (quizData.timelimit * 60 - (timeLeft || 0)) : 0,
+    };
+
+    try {
+      const response = await API.post('/quizzes/submit', payload);
+      const data = response.data;
+      
+      const answerDetails: AnswerDetail[] = data.answers.map((ans: any) => {
+        const question = quizData.quiz.questions.find(q => q.questionId === ans.questionId);
+        return {
+          questionId: ans.questionId,
+          question: question?.question || 'Unknown question',
+          selectedAnswer: ans.selectedAnswer,
+          correctAnswer: ans.correctAnswer || 'N/A',
+          isCorrect: ans.isCorrect,
+          explanation: ans.explanation || 'No explanation available.',
+        };
+      });
+
+      const percentage = (data.score / answerDetails.length) * 100;
+      const topics = quizData.quiz.questions.map((q) => q.topic || 'General');
+      const topicPerformance: { [key: string]: { correct: number; total: number } } = {};
+      answerDetails.forEach((detail, index) => {
+        const topic = topics[index] || 'General';
+        if (!topicPerformance[topic]) {
+          topicPerformance[topic] = { correct: 0, total: 0 };
+        }
+        topicPerformance[topic].total++;
+        if (detail.isCorrect) {
+          topicPerformance[topic].correct++;
+        }
+      });
+
+      const strengths = Object.entries(topicPerformance)
+        .filter(([_, perf]) => (perf.correct / perf.total) >= 0.7)
+        .map(([topic]) => topic);
+
+      const weaknesses = Object.entries(topicPerformance)
+        .filter(([_, perf]) => (perf.correct / perf.total) < 0.5)
+        .map(([topic]) => topic);
+
+      setResult({
+        score: data.score,
+        totalQuestions: answerDetails.length,
+        percentage,
+        aiFeedback: data.feedback || data.aiFeedback || 'Great effort! Keep practicing to improve further.',
+        aiExplanation: data.aiExplanation || 'Based on your answers, focus on the areas where you made mistakes.',
+        recommendation: data.recommendation || data.recommendLesson || 'Review the topics you found challenging.',
+        strengths,
+        weaknesses,
+        answerDetails,
+        quizTitle: quizData.quiz.title,
+      });
+      
+      setQuizSubmitted(true);
+    } catch (error) {
+      console.error('Error submitting quiz:', error);
+      alert('Failed to submit quiz. Please try again.');
+    }
   };
-
-  try {
-    const response = await API.post('/quizzes/submit', payload);
-    const data = response.data;
-    
-    // ✅ Use explanations from backend response
-    const answerDetails: AnswerDetail[] = data.answers.map((ans: any) => {
-      const question = quizData.quiz.questions.find(q => q.questionId === ans.questionId);
-      return {
-        questionId: ans.questionId,
-        question: question?.question || 'Unknown question',
-        selectedAnswer: ans.selectedAnswer,
-        correctAnswer: ans.correctAnswer || 'N/A',
-        isCorrect: ans.isCorrect,
-        explanation: ans.explanation || 'No explanation available.',
-      };
-    });
-
-    const percentage = (data.score / answerDetails.length) * 100;
-
-    // Determine strengths and weaknesses based on topics
-    const topics = quizData.quiz.questions.map((q) => q.topic || 'General');
-    const topicPerformance: { [key: string]: { correct: number; total: number } } = {};
-    answerDetails.forEach((detail, index) => {
-      const topic = topics[index] || 'General';
-      if (!topicPerformance[topic]) {
-        topicPerformance[topic] = { correct: 0, total: 0 };
-      }
-      topicPerformance[topic].total++;
-      if (detail.isCorrect) {
-        topicPerformance[topic].correct++;
-      }
-    });
-
-    const strengths = Object.entries(topicPerformance)
-      .filter(([_, perf]) => (perf.correct / perf.total) >= 0.7)
-      .map(([topic]) => topic);
-
-    const weaknesses = Object.entries(topicPerformance)
-      .filter(([_, perf]) => (perf.correct / perf.total) < 0.5)
-      .map(([topic]) => topic);
-
-    setResult({
-      score: data.score,
-      totalQuestions: answerDetails.length,
-      percentage,
-      aiFeedback: data.feedback || data.aiFeedback || 'Great effort! Keep practicing to improve further.',
-      aiExplanation: data.aiExplanation || 'Based on your answers, focus on the areas where you made mistakes.',
-      recommendation: data.recommendation || data.recommendLesson || 'Review the topics you found challenging.',
-      strengths,
-      weaknesses,
-      answerDetails,
-      quizTitle: quizData.quiz.title,
-    });
-    
-    setQuizSubmitted(true);
-  } catch (error) {
-    console.error('Error submitting quiz:', error);
-    alert('Failed to submit quiz. Please try again.');
-  }
-};
 
   const handleBackToLessons = () => {
     navigate('/student/quiz');
   };
 
+  // ----- Loading / Error (custom CSS) -----
   if (loading) {
     return (
       <Layout title="Quiz" sidebar={<StudentSidebar />}>
-        <Container maxWidth="md" sx={{ mt: 8, textAlign: 'center' }}>
-          <LinearProgress />
-          <Typography sx={{ mt: 2 }}>Loading quiz...</Typography>
-        </Container>
+        <div className="quiz-loading">
+          <div className="progress-bar-wrapper" style={{ maxWidth: 400, margin: '0 auto' }}>
+            <div className="progress-bar" style={{ width: '100%' }} />
+          </div>
+          <p>Loading quiz...</p>
+        </div>
       </Layout>
     );
   }
@@ -593,12 +570,12 @@ const QuizAttempt: React.FC = () => {
   if (error) {
     return (
       <Layout title="Quiz" sidebar={<StudentSidebar />}>
-        <Container maxWidth="md" sx={{ mt: 4 }}>
+        <div className="quiz-error">
           <Alert severity="error">{error}</Alert>
-          <Button variant="contained" sx={{ mt: 2 }} onClick={handleBackToLessons}>
+          <button className="quiz-btn-outline" onClick={handleBackToLessons}>
             Back to Lessons
-          </Button>
-        </Container>
+          </button>
+        </div>
       </Layout>
     );
   }
@@ -608,245 +585,95 @@ const QuizAttempt: React.FC = () => {
   const questions = quizData.quiz.questions;
   const totalQuestions = questions.length;
 
-  // ========== RESULTS VIEW ==========
+  // ===================== RESULTS VIEW (custom CSS) =====================
   if (quizSubmitted && result) {
-    const { score, totalQuestions, percentage, aiFeedback, aiExplanation, recommendation, strengths, weaknesses, answerDetails, quizTitle } = result;
+    const {
+      score, totalQuestions, percentage,
+      aiFeedback, aiExplanation, recommendation,
+      strengths, weaknesses, answerDetails, quizTitle,
+    } = result;
     const passed = percentage >= 70;
 
     return (
       <Layout title="Quiz Results" sidebar={<StudentSidebar />}>
-        <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-          {/* Header */}
-          <Paper elevation={0} sx={{ p: 4, borderRadius: 3, bgcolor: 'white', mb: 3 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
-                {passed ? '🎉 Excellent Work!' : '💪 Keep Learning!'}
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-                {quizTitle}
-              </Typography>
-              
-              {/* Score Circle */}
-              <Box
-                sx={{
-                  width: 150,
-                  height: 150,
-                  borderRadius: '50%',
-                  bgcolor: passed ? '#ECFDF5' : '#FEF2F2',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  my: 3,
-                  border: `4px solid ${passed ? '#10B981' : '#EF4444'}`,
-                }}
-              >
-                <Typography variant="h2" sx={{ fontWeight: 700, color: passed ? '#10B981' : '#EF4444' }}>
-                  {Math.round(percentage)}%
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {score} / {totalQuestions} correct
-                </Typography>
-              </Box>
+        <div className="results-container">
+          <div className="results-card">
+            <h1>{passed ? '🎉 Excellent Work!' : '💪 Keep Learning!'}</h1>
+            <p className="meta">{quizTitle}</p>
+            <div className="score-circle" style={{ borderColor: passed ? '#2E7D52' : '#C0392B' }}>
+              <span className="score-number" style={{ color: passed ? '#2E7D52' : '#C0392B' }}>
+                {Math.round(percentage)}%
+              </span>
+              <span className="score-label">{score} / {totalQuestions} correct</span>
+            </div>
+            <Chip label={passed ? '✅ Passed' : '❌ Needs Improvement'} color={passed ? 'success' : 'error'} />
+          </div>
 
-              {/* Pass/Fail Status */}
-              <Chip
-                label={passed ? '✅ Passed' : '❌ Needs Improvement'}
-                color={passed ? 'success' : 'error'}
-                sx={{ mb: 2 }}
-              />
+          <div className="ai-feedback-box">
+            <h3>💡 AI Feedback</h3>
+            <p>{aiFeedback}</p>
+          </div>
 
-              {/* AI Feedback */}
-              <Paper elevation={1} sx={{ p: 3, bgcolor: '#F5F3FF', borderRadius: 2, textAlign: 'left', mt: 2 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                  <Lightbulb sx={{ color: '#7C3AED' }} />
-                  <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    AI Feedback
-                  </Typography>
-                </Box>
-                <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                  {aiFeedback}
-                </Typography>
-              </Paper>
-            </Box>
-          </Paper>
+          <div className="strengths-weaknesses">
+            <div className="strength-box">
+              <h4>✅ Strengths</h4>
+              {strengths.length ? (
+                <ul>{strengths.map((s, i) => <li key={i}>{s}</li>)}</ul>
+              ) : <p>Keep practicing to identify your strengths!</p>}
+            </div>
+            <div className="weakness-box">
+              <h4>📉 Areas to Improve</h4>
+              {weaknesses.length ? (
+                <ul>{weaknesses.map((w, i) => <li key={i}>{w}</li>)}</ul>
+              ) : <p>No major weaknesses identified. Great job!</p>}
+            </div>
+          </div>
 
-          {/* Strengths & Weaknesses - USING GRID CORRECTLY */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 12, md: 6 }}> {/* ✅ Fixed: using 'size' prop */}
-              <Card sx={{ borderRadius: 3, bgcolor: '#ECFDF5' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <TrendingUp sx={{ color: '#10B981' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#10B981' }}>
-                      Strengths
-                    </Typography>
-                  </Box>
-                  {strengths.length > 0 ? (
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      {strengths.map((s, i) => (
-                        <li key={i}>
-                          <Typography variant="body2">{s}</Typography>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      Keep practicing to identify your strengths!
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 12, md: 6 }}> {/* ✅ Fixed: using 'size' prop */}
-              <Card sx={{ borderRadius: 3, bgcolor: '#FEF2F2' }}>
-                <CardContent>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                    <TrendingDown sx={{ color: '#EF4444' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#EF4444' }}>
-                      Areas to Improve
-                    </Typography>
-                  </Box>
-                  {weaknesses.length > 0 ? (
-                    <ul style={{ margin: 0, paddingLeft: 20 }}>
-                      {weaknesses.map((w, i) => (
-                        <li key={i}>
-                          <Typography variant="body2">{w}</Typography>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <Typography variant="body2" color="text.secondary">
-                      No major weaknesses identified. Great job!
-                    </Typography>
-                  )}
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          <div className="recommendation-box">
+            <h4>📘 Recommended Next Lesson</h4>
+            <p>{recommendation}</p>
+            {aiExplanation && <p className="meta">{aiExplanation}</p>}
+          </div>
 
-          {/* AI Recommendation */}
-          <Paper elevation={0} sx={{ p: 3, borderRadius: 3, bgcolor: 'white', mb: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-              <School sx={{ color: '#7C3AED' }} />
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Recommended Next Lesson
-              </Typography>
-            </Box>
-            <Typography variant="body1" color="primary">
-              📘 {recommendation}
-            </Typography>
-            {aiExplanation && (
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                {aiExplanation}
-              </Typography>
-            )}
-          </Paper>
-
-          {/* Detailed Answers Accordion */}
-          <Paper elevation={0} sx={{ borderRadius: 3, bgcolor: 'white', overflow: 'hidden' }}>
-            <Box
-              sx={{
-                p: 2,
-                bgcolor: '#F5F3FF',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                cursor: 'pointer',
-              }}
-              onClick={() => setShowExplanations(!showExplanations)}
-            >
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                📝 Detailed Answers & Explanations
-              </Typography>
-              <Chip
-                label={showExplanations ? 'Hide' : 'Show'}
-                size="small"
-                sx={{ bgcolor: '#7C3AED', color: 'white' }}
-              />
-            </Box>
-            
+          <div className="explanations-section">
+            <div className="explanations-header" onClick={() => setShowExplanations(!showExplanations)}>
+              <h3>📝 Detailed Answers & Explanations</h3>
+              <Chip label={showExplanations ? 'Hide' : 'Show'} size="small" sx={{ bgcolor: '#C0392B', color: 'white' }} />
+            </div>
             {showExplanations && (
-              <Box sx={{ p: 2 }}>
+              <div className="explanations-list">
                 {answerDetails.map((detail, index) => (
-                  <Accordion key={index} sx={{ mb: 1, borderRadius: 2, '&:before': { display: 'none' } }}>
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          {detail.isCorrect ? (
-                            <CheckCircle sx={{ color: '#10B981' }} />
-                          ) : (
-                            <Cancel sx={{ color: '#EF4444' }} />
-                          )}
-                        </Box>
-                        <Typography variant="subtitle1" sx={{ fontWeight: 500, flex: 1 }}>
-                          Q{index + 1}: {detail.question.length > 60 ? detail.question.substring(0, 60) + '...' : detail.question}
-                        </Typography>
-                        <Chip
-                          label={detail.isCorrect ? 'Correct' : 'Incorrect'}
-                          size="small"
-                          color={detail.isCorrect ? 'success' : 'error'}
-                        />
-                      </Box>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ mb: 1 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>Your answer:</strong> {detail.selectedAnswer || 'Not answered'}
-                        </Typography>
-                        {!detail.isCorrect && (
-                          <Typography variant="body2" color="success.main">
-                            <strong>Correct answer:</strong> {detail.correctAnswer}
-                          </Typography>
-                        )}
-                      </Box>
-                      <Divider sx={{ my: 1 }} />
-                      <Box sx={{ bgcolor: '#F5F3FF', p: 2, borderRadius: 2 }}>
-                        <Typography variant="body2" color="text.secondary">
-                          <strong>📖 Explanation:</strong>
-                        </Typography>
-                        <Typography variant="body2">
-                          {detail.explanation || 'No explanation available for this question.'}
-                        </Typography>
-                      </Box>
-                    </AccordionDetails>
-                  </Accordion>
+                  <div key={index} className="explanation-item">
+                    <div className="explanation-summary">
+                      <span>{detail.isCorrect ? '✅' : '❌'}</span>
+                      <span>Q{index + 1}: {detail.question.length > 60 ? detail.question.substring(0, 60) + '...' : detail.question}</span>
+                      <Chip label={detail.isCorrect ? 'Correct' : 'Incorrect'} size="small" color={detail.isCorrect ? 'success' : 'error'} />
+                    </div>
+                    <div className="explanation-details">
+                      <p><strong>Your answer:</strong> {detail.selectedAnswer || 'Not answered'}</p>
+                      {!detail.isCorrect && <p><strong>Correct answer:</strong> {detail.correctAnswer}</p>}
+                      <div className="explanation-text">
+                        <strong>📖 Explanation:</strong>
+                        <p>{detail.explanation || 'No explanation available.'}</p>
+                      </div>
+                    </div>
+                  </div>
                 ))}
-              </Box>
+              </div>
             )}
-          </Paper>
+          </div>
 
-          {/* Action Buttons */}
-          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 3, flexWrap: 'wrap' }}>
-            <Button
-              variant="outlined"
-              onClick={handleBackToLessons}
-              sx={{ borderColor: '#7C3AED', color: '#7C3AED', px: 4 }}
-            >
-              Back to Quizzes
-            </Button>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' }, px: 4 }}
-              onClick={() => navigate('/student/reports')}
-            >
-              View Full Reports
-            </Button>
-            <Button
-              variant="contained"
-              sx={{ bgcolor: '#10B981', '&:hover': { bgcolor: '#059669' }, px: 4 }}
-              onClick={() => navigate(`/student/quiz/${lessonId}`)}
-            >
-              Retry Quiz
-            </Button>
-          </Box>
-        </Container>
+          <div className="action-buttons">
+            <button className="quiz-btn-outline" onClick={handleBackToLessons}>Back to Quizzes</button>
+            <button className="quiz-btn" onClick={() => navigate('/student/reports')}>View Reports</button>
+            <button className="quiz-btn" style={{ background: '#2E7D52', borderColor: '#2E7D52' }} onClick={() => navigate(`/student/quiz/${lessonId}`)}>Retry Quiz</button>
+          </div>
+        </div>
       </Layout>
     );
   }
 
-  // ========== QUIZ VIEW ==========
+  // ===================== QUIZ TAKING VIEW (custom CSS) =====================
   const question = questions[currentQuestion];
   const progress = ((currentQuestion + 1) / totalQuestions) * 100;
   const minutes = Math.floor((timeLeft || 0) / 60);
@@ -866,39 +693,29 @@ const QuizAttempt: React.FC = () => {
 
   return (
     <Layout title="Quiz" sidebar={<StudentSidebar />}>
-      <Container maxWidth="md" sx={{ mt: 4 }}>
-        <Paper elevation={0} sx={{ p: 4, borderRadius: 3, bgcolor: 'white' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              Question {currentQuestion + 1} of {totalQuestions}
-            </Typography>
-            {timeLeft !== null && (
-              <Chip
-                icon={<Timer />}
-                label={`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`}
-                size="small"
-                sx={{ bgcolor: '#FEF2F2', color: '#EF4444' }}
-              />
-            )}
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={progress}
-            sx={{
-              height: 8,
-              borderRadius: 4,
-              mb: 3,
-              bgcolor: '#F5F3FF',
-              '& .MuiLinearProgress-bar': {
-                borderRadius: 4,
-                background: 'linear-gradient(90deg, #7C3AED, #8B5CF6)',
-              },
-            }}
-          />
-          <Typography variant="body1" sx={{ fontSize: '1.1rem', mb: 3 }}>
-            {question.question}
-          </Typography>
-          
+      <div className="quiz-taking-container">
+        <div className="quiz-card">
+          <div className="quiz-header">
+            <div className="quiz-title">
+              <h2>Question {currentQuestion + 1} of {totalQuestions}</h2>
+              {timeLeft !== null && (
+                <Chip
+                  icon={<Timer />}
+                  label={`${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`}
+                  size="small"
+                  sx={{ bgcolor: '#FEF2F2', color: '#C0392B' }}
+                />
+              )}
+            </div>
+            <div className="progress-bar-wrapper">
+              <div className="progress-bar" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
+
+          <div className="question-text">
+            <p>{question.question}</p>
+          </div>
+
           {isTextQuestion ? (
             <TextField
               fullWidth
@@ -907,9 +724,10 @@ const QuizAttempt: React.FC = () => {
               placeholder="Type your answer here..."
               value={answers[question.questionId] || ''}
               onChange={(e) => handleAnswer(question.questionId, e.target.value)}
+              className="text-answer"
             />
           ) : (
-            <FormControl component="fieldset" fullWidth>
+            <FormControl component="fieldset" className="options-group">
               <RadioGroup
                 value={answers[question.questionId] || ''}
                 onChange={(e) => handleAnswer(question.questionId, e.target.value)}
@@ -920,79 +738,45 @@ const QuizAttempt: React.FC = () => {
                     value={option}
                     control={<Radio sx={{ color: '#7C3AED', '&.Mui-checked': { color: '#7C3AED' } }} />}
                     label={option}
-                    sx={{
-                      mb: 1,
-                      p: 1,
-                      borderRadius: 2,
-                      border: '1px solid',
-                      borderColor: answers[question.questionId] === option ? '#7C3AED' : '#E2E8F0',
-                      bgcolor: answers[question.questionId] === option ? '#F5F3FF' : 'transparent',
-                      transition: 'all 0.2s ease',
-                      '&:hover': { bgcolor: '#F5F3FF' },
-                    }}
+                    className="option-item"
                   />
                 ))}
               </RadioGroup>
             </FormControl>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-            <Button
-              variant="outlined"
+          <div className="quiz-nav">
+            <button
+              className="quiz-btn-outline"
               disabled={currentQuestion === 0}
-              onClick={() => setCurrentQuestion((prev) => prev - 1)}
-              sx={{ borderColor: '#7C3AED', color: '#7C3AED' }}
+              onClick={() => setCurrentQuestion(prev => prev - 1)}
             >
               Previous
-            </Button>
+            </button>
             {currentQuestion === totalQuestions - 1 ? (
-              <Button
-                variant="contained"
-                sx={{ bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' } }}
-                onClick={handleSubmitQuiz}
-              >
+              <button className="quiz-btn" onClick={handleSubmitQuiz}>
                 Submit Quiz
-              </Button>
+              </button>
             ) : (
-              <Button
-                variant="contained"
-                sx={{ bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' } }}
-                onClick={() => setCurrentQuestion((prev) => prev + 1)}
-              >
+              <button className="quiz-btn" onClick={() => setCurrentQuestion(prev => prev + 1)}>
                 Next
-              </Button>
+              </button>
             )}
-          </Box>
+          </div>
 
-          {/* Question Progress Indicator */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, mt: 3, flexWrap: 'wrap' }}>
+          <div className="question-progress">
             {questions.map((_, idx) => (
-              <Box
+              <div
                 key={idx}
-                sx={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '0.75rem',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  bgcolor: answers[questions[idx].questionId] ? '#7C3AED' : '#E2E8F0',
-                  color: answers[questions[idx].questionId] ? 'white' : '#64748B',
-                  '&:hover': {
-                    opacity: 0.8,
-                  },
-                }}
+                className={`progress-dot ${answers[questions[idx].questionId] ? 'answered' : ''}`}
                 onClick={() => setCurrentQuestion(idx)}
               >
                 {idx + 1}
-              </Box>
+              </div>
             ))}
-          </Box>
-        </Paper>
-      </Container>
+          </div>
+        </div>
+      </div>
     </Layout>
   );
 };

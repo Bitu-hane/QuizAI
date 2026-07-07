@@ -162,6 +162,7 @@
 // };
 
 // export default Sidebar;
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -188,6 +189,7 @@ import ChevronRight from '@mui/icons-material/ChevronRight';
 
 import { useAuth } from '../../common/contexts/AuthContext';
 import API from '../../common/services/api';
+import './Sidebar.css';
 
 interface SidebarProps {
   open?: boolean;
@@ -202,7 +204,7 @@ const StudentSidebar: React.FC<SidebarProps> = ({
   open = true,
   onClose = () => {},
   variant = 'temporary',
-  width = 260,
+  width = 264,
   collapsed = false,
   onToggleCollapse = () => {},
 }) => {
@@ -260,7 +262,7 @@ const StudentSidebar: React.FC<SidebarProps> = ({
   // Get grade from user data
   const gradeDisplay = userData?.gradeId ? `Grade ${userData.gradeId}` : '';
 
-  // ✅ Get profile image from PImage array
+  // Get profile image from PImage array
   const profileImage = userData?.PImage && userData.PImage.length > 0 
     ? userData.PImage[0] 
     : null;
@@ -284,56 +286,56 @@ const StudentSidebar: React.FC<SidebarProps> = ({
   };
 
   const drawerContent = (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      {/* HEADER */}
-      <Box
-        sx={{
-          height: 64,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: collapsed ? 'center' : 'space-between',
-          px: collapsed ? 1 : 2,
-          bgcolor: '#7C3AED',
-          color: 'white',
-        }}
-      >
+    <Box className="sidebar-container">
+      {/* HEADER - QuizAI Brand */}
+      <Box className="sidebar-header">
         {!collapsed && (
-          <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
-            QuizAI Student
-          </Typography>
+          <Box className="brand">
+            <Box className="brand-dot" />
+            <Typography className="brand-text">QuizAI</Typography>
+          </Box>
+        )}
+        {collapsed && (
+          <Box className="brand">
+            <Box className="brand-dot" />
+          </Box>
         )}
 
         {variant === 'permanent' && (
-          <IconButton onClick={onToggleCollapse} sx={{ color: 'white' }}>
+          <IconButton onClick={onToggleCollapse} className="collapse-btn">
             {collapsed ? <ChevronRight /> : <ChevronLeft />}
           </IconButton>
         )}
       </Box>
 
       {/* USER INFO */}
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box className="user-info">
         {loading || authLoading ? (
-          <CircularProgress size={28} sx={{ color: '#7C3AED' }} />
+          <CircularProgress size={28} sx={{ color: '#C0392B' }} />
         ) : (
           <>
-            {/* ✅ Avatar with profile image or initials */}
             <Avatar
               src={profileImage || undefined}
+              className="user-avatar"
               sx={{
-                bgcolor: profileImage ? 'transparent' : '#7C3AED',
-                width: 48,
-                height: 48,
+                bgcolor: profileImage ? 'transparent' : '#1B2430',
+                border: '2px solid #C0392B',
+                fontFamily: "'Space Grotesk', sans-serif",
+                fontWeight: 700,
+                fontSize: 15,
+                width: 44,
+                height: 44,
               }}
             >
               {!profileImage && getInitials()}
             </Avatar>
 
             {!collapsed && (
-              <Box>
-                <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
+              <Box className="user-details">
+                <Typography className="user-name">
                   {displayName || 'Student'}
                 </Typography>
-                <Typography sx={{ fontSize: 12, color: 'text.secondary' }}>
+                <Typography className="user-grade">
                   {gradeDisplay || 'No grade assigned'}
                 </Typography>
               </Box>
@@ -342,10 +344,10 @@ const StudentSidebar: React.FC<SidebarProps> = ({
         )}
       </Box>
 
-      <Divider />
+      <Divider className="sidebar-divider" />
 
       {/* MENU */}
-      <List sx={{ flex: 1, px: 1, pt: 1 }}>
+      <List className="menu-list">
         {menuItems.map((item) => {
           const active = location.pathname === item.path;
 
@@ -353,19 +355,15 @@ const StudentSidebar: React.FC<SidebarProps> = ({
             <ListItem
               key={item.text}
               onClick={() => handleNavigate(item.path)}
+              className={`menu-item ${active ? 'active' : ''}`}
               sx={{
-                borderRadius: 2,
-                mb: 0.5,
-                cursor: 'pointer',
                 justifyContent: collapsed ? 'center' : 'flex-start',
-                bgcolor: active ? '#F5F3FF' : 'transparent',
-                '&:hover': { bgcolor: '#F5F3FF' },
               }}
             >
               <ListItemIcon
+                className={`menu-icon ${active ? 'active' : ''}`}
                 sx={{
                   minWidth: collapsed ? 0 : 40,
-                  color: active ? '#7C3AED' : '#64748B',
                 }}
               >
                 {item.icon}
@@ -374,13 +372,7 @@ const StudentSidebar: React.FC<SidebarProps> = ({
               {!collapsed && (
                 <ListItemText
                   primary={item.text}
-                  sx={{
-                    color: active ? '#7C3AED' : '#334155',
-                    '& .MuiTypography-root': {
-                      fontSize: 14,
-                      fontWeight: active ? 600 : 400,
-                    },
-                  }}
+                  className={`menu-text ${active ? 'active' : ''}`}
                 />
               )}
             </ListItem>
@@ -388,38 +380,28 @@ const StudentSidebar: React.FC<SidebarProps> = ({
         })}
       </List>
 
-      <Divider />
+      <Divider className="sidebar-divider" />
 
       {/* LOGOUT */}
-      <List sx={{ px: 1, pb: 2 }}>
+      <List className="logout-list">
         <ListItem
           onClick={handleLogout}
+          className="logout-item"
           sx={{
-            borderRadius: 2,
-            cursor: 'pointer',
             justifyContent: collapsed ? 'center' : 'flex-start',
-            '&:hover': { bgcolor: '#FEF2F2' },
           }}
         >
           <ListItemIcon
+            className="logout-icon"
             sx={{
               minWidth: collapsed ? 0 : 40,
-              color: '#EF4444',
             }}
           >
             <LogoutIcon />
           </ListItemIcon>
 
           {!collapsed && (
-            <ListItemText
-              primary="Logout"
-              sx={{
-                color: '#EF4444',
-                '& .MuiTypography-root': {
-                  fontWeight: 500,
-                },
-              }}
-            />
+            <ListItemText primary="Logout" className="logout-text" />
           )}
         </ListItem>
       </List>
@@ -431,15 +413,17 @@ const StudentSidebar: React.FC<SidebarProps> = ({
       variant={variant}
       open={open}
       onClose={onClose}
+      className="sidebar-drawer"
       sx={{
         width: drawerWidth,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          borderRight: '1px solid #E2E8F0',
+          borderRight: '1px solid rgba(27,36,48,0.12)',
           overflowX: 'hidden',
           transition: 'width 0.25s ease',
+          backgroundColor: '#fff',
         },
       }}
     >

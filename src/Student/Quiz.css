@@ -1,0 +1,211 @@
+/* ===== Quiz Content ===== */
+.quiz-content {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+/* ===== Page Head ===== */
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 6px;
+}
+
+.page-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  background: #FBEDEB;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.page-head h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(26px, 3.4vw, 32px);
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: #1B2430;
+}
+
+/* ===== Meta ===== */
+.meta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  color: #4B5563;
+  margin: 0 0 28px 60px;
+}
+
+/* ===== Notice ===== */
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #EAF0F6;
+  border: 1px solid #C9D9E8;
+  color: #3B6EA5;
+  border-radius: 6px;
+  padding: 16px 18px;
+  font-size: 14.5px;
+  margin-bottom: 28px;
+}
+
+.notice svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.notice span {
+  color: #1B2430;
+}
+
+/* ===== Sheet (empty state) ===== */
+.sheet {
+  background: #fff;
+  border: 1.5px dashed rgba(27, 36, 48, 0.12);
+  border-radius: 8px;
+  padding: 40px 34px;
+  text-align: center;
+  position: relative;
+  margin-bottom: 26px;
+}
+
+.sheet svg {
+  margin-bottom: 14px;
+}
+
+.sheet h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  margin: 0 0 8px;
+  font-size: 17px;
+  color: #1B2430;
+}
+
+.sheet p {
+  margin: 0;
+  color: #4B5563;
+  font-size: 14px;
+}
+
+/* ===== Subject Select ===== */
+.subject-select {
+  margin-bottom: 28px;
+}
+
+.subject-select label {
+  display: block;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: #4B5563;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ===== Lessons Grid ===== */
+.lessons-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ===== Lesson Card ===== */
+.lesson-card {
+  background: #fff;
+  border: 1px solid rgba(27, 36, 48, 0.12);
+  border-radius: 7px;
+  padding: 22px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  transition: box-shadow 0.15s ease;
+}
+
+.lesson-card:hover {
+  box-shadow: 0 4px 12px rgba(27, 36, 48, 0.06);
+}
+
+.lesson-info {
+  flex: 1;
+  min-width: 180px;
+}
+
+.lesson-info h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  margin: 0 0 4px;
+  color: #1B2430;
+}
+
+.lesson-info p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: #4B5563;
+}
+
+.lesson-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.lesson-action {
+  flex-shrink: 0;
+}
+
+.quiz-btn {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  background: #1B2430;
+  color: #FBFAF6;
+  border: 2px solid #1B2430;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.quiz-btn:hover:not(:disabled) {
+  background: #C0392B;
+  border-color: #C0392B;
+  transform: translateY(-1px);
+}
+
+.quiz-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 640px) {
+  .lesson-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .lesson-action {
+    align-self: flex-start;
+  }
+
+  .page-head h1 {
+    font-size: 24px;
+  }
+
+  .meta {
+    margin-left: 0;
+  }
+
+  .quiz-content {
+    padding: 0 16px;
+  }
+}

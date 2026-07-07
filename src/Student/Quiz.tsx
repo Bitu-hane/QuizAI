@@ -2,24 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Chip,
   CircularProgress,
   Alert,
+  Select,
+  MenuItem,
+  FormControl,
+  Button,
 } from '@mui/material';
-import { PlayArrow } from '@mui/icons-material';
 import Layout from '../common/component/layout';
 import StudentSidebar from './components/Sidebar';
 import API from '../common/services/api';
+import './Quiz.css';
 
 // ----- Types -----
 interface Subject {
@@ -121,7 +115,7 @@ const Quiz: React.FC = () => {
   if (error) {
     return (
       <Layout title="Quiz" sidebar={<StudentSidebar />}>
-        <Container maxWidth="lg" sx={{ mt: 4 }}>
+        <Box className="content" sx={{ maxWidth: 900, mx: 'auto' }}>
           <Alert severity="warning" sx={{ mt: 4 }}>
             {error}
             <Button
@@ -132,135 +126,146 @@ const Quiz: React.FC = () => {
               Go to Onboarding
             </Button>
           </Alert>
-        </Container>
+        </Box>
       </Layout>
     );
   }
 
   return (
     <Layout title="Quiz" sidebar={<StudentSidebar />}>
-      <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }} gutterBottom>
-          📝 Select Your Quiz
-        </Typography>
+      <div className="quiz-content">
+        {/* ----- Page Head ----- */}
+        <div className="page-head">
+          <div className="page-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M4 20L4.8 15.2L16 4L20 8L8.8 19.2L4 20Z" stroke="#C0392B" strokeWidth="1.7" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <h1>Select Your Quiz</h1>
+        </div>
+        <p className="meta">
+          Grade {studentGrade || 'N/A'} · {subjects.length} subjects available
+        </p>
 
-        {studentGrade && (
-          <Typography variant="body1" sx={{ color: '#64748B', mb: 3 }}>
-            Grade {studentGrade} • {subjects.length} subjects available
-          </Typography>
-        )}
-
+        {/* ----- Notice if no subjects ----- */}
         {studentGrade && subjects.length === 0 && (
-          <Alert severity="info" sx={{ mb: 4 }}>
-            There are currently no subjects available for Grade {studentGrade}. Please check back later or ask your administrator to create subjects.
-          </Alert>
+          <div className="notice">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 8V13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+              <circle cx="12" cy="16.3" r="0.9" fill="currentColor" />
+            </svg>
+            <span>
+              There are currently no subjects available for Grade {studentGrade}.
+              Please check back later or ask your administrator to create subjects.
+            </span>
+          </div>
         )}
 
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <FormControl fullWidth disabled={!subjects.length}>
-              <InputLabel>Subject</InputLabel>
-              <Select
-                value={selectedSubject || ''}
-                label="Subject"
-                onChange={(e) => setSelectedSubject(Number(e.target.value))}
-              >
-                {subjects.map((s) => (
-                  <MenuItem key={s._id} value={s.subjectId}>
-                    {s.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-        </Grid>
+        {/* ----- Subject Select ----- */}
+        <div className="subject-select">
+          <label>Subject</label>
+          <FormControl fullWidth disabled={!subjects.length}>
+            <Select
+              value={selectedSubject || ''}
+              onChange={(e) => setSelectedSubject(Number(e.target.value))}
+              displayEmpty
+              renderValue={(value) => {
+                if (!value) return <span style={{ color: '#9AA3AE' }}>Select a subject…</span>;
+                const subject = subjects.find(s => s.subjectId === value);
+                return subject?.name || '';
+              }}
+              sx={{
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '15px',
+                padding: '14px 16px',
+                borderRadius: '6px',
+                borderColor: 'rgba(27,36,48,0.12)',
+                '& .MuiSelect-select': { padding: '0' },
+                '& fieldset': { borderColor: 'rgba(27,36,48,0.12)', borderRadius: '6px' },
+                '&:hover fieldset': { borderColor: '#1B2430' },
+                '&.Mui-focused fieldset': { borderColor: '#1B2430' },
+              }}
+            >
+              {subjects.map((s) => (
+                <MenuItem key={s._id} value={s.subjectId}>
+                  {s.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </div>
 
+        {/* ----- Lessons / Quiz List ----- */}
         {selectedSubject && (
-          <>
-            <Typography variant="h6" sx={{ mb: 2 }}>Lessons</Typography>
-            <Grid container spacing={3}>
-              {subjectLessons.length === 0 ? (
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    No lessons available for this subject.
-                  </Typography>
-                </Grid>
-              ) : (
-                subjectLessons.map((lesson) => {
-                  const quiz = getQuizForLesson(lesson.lessonId);
-                  const questionCount = quiz?.questions?.length || 0;
-                  return (
-                    <Grid key={lesson._id} size={{ xs: 12, md: 6 }}>
-                      <Card
-                        sx={{
-                          borderRadius: 3,
-                          boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
-                          transition: 'transform 0.2s ease',
-                          '&:hover': { transform: 'translateY(-4px)' },
-                          display: 'flex',
-                          flexDirection: 'column',
-                          height: '100%',
+          <div className="lessons-grid">
+            {subjectLessons.length === 0 ? (
+              <div className="sheet">
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
+                  <rect x="5" y="3" width="14" height="18" rx="1.5" stroke="#9AA3AE" strokeWidth="1.6" strokeDasharray="3 3" />
+                  <path d="M9 8H15M9 12H13" stroke="#9AA3AE" strokeWidth="1.6" strokeLinecap="round" />
+                </svg>
+                <h3>No lessons available</h3>
+                <p>No lessons have been added for this subject yet.</p>
+              </div>
+            ) : (
+              subjectLessons.map((lesson) => {
+                const quiz = getQuizForLesson(lesson.lessonId);
+                const questionCount = quiz?.questions?.length || 0;
+                const hasQuiz = !!quiz;
+
+                return (
+                  <div className="lesson-card" key={lesson._id}>
+                    <div className="lesson-info">
+                      <h3>{lesson.title}</h3>
+                      <p>{lesson.description || 'No description available'}</p>
+                      <div className="lesson-tags">
+                        <Chip
+                          label={`${questionCount} questions`}
+                          size="small"
+                          sx={{ bgcolor: '#F5F3FF', color: '#7C3AED' }}
+                        />
+                        {quiz?.difficulty && (
+                          <Chip
+                            label={`Difficulty: ${quiz.difficulty}/5`}
+                            size="small"
+                            color={
+                              quiz.difficulty <= 2 ? 'success' :
+                              quiz.difficulty <= 4 ? 'warning' : 'error'
+                            }
+                          />
+                        )}
+                        {quiz?.timelimit && (
+                          <Chip
+                            label={`${quiz.timelimit} min`}
+                            size="small"
+                            variant="outlined"
+                          />
+                        )}
+                      </div>
+                    </div>
+                    <div className="lesson-action">
+                      <button
+                        className="quiz-btn"
+                        disabled={!hasQuiz}
+                        onClick={() => {
+                          if (hasQuiz) {
+                            navigate(`/student/quiz/attempt/${lesson.lessonId}`);
+                          } else {
+                            alert('No quiz available for this lesson yet.');
+                          }
                         }}
                       >
-                        <CardContent sx={{ flexGrow: 1 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            {lesson.title}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                            {lesson.description || 'No description available'}
-                          </Typography>
-                          <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                            <Chip
-                              label={`${questionCount} questions`}
-                              size="small"
-                              sx={{ bgcolor: '#F5F3FF', color: '#7C3AED' }}
-                            />
-                            {quiz?.difficulty && (
-                              <Chip
-                                label={`Difficulty: ${quiz.difficulty}/5`}
-                                size="small"
-                                color={
-                                  quiz.difficulty <= 2 ? 'success' :
-                                  quiz.difficulty <= 4 ? 'warning' : 'error'
-                                }
-                              />
-                            )}
-                            {quiz?.timelimit && (
-                              <Chip
-                                label={`${quiz.timelimit} min`}
-                                size="small"
-                                variant="outlined"
-                              />
-                            )}
-                          </Box>
-                        </CardContent>
-                        <Box sx={{ p: 2 }}>
-                          <Button
-                            variant="contained"
-                            fullWidth
-                            startIcon={<PlayArrow />}
-                            sx={{ bgcolor: '#7C3AED', '&:hover': { bgcolor: '#6D28D9' } }}
-                            onClick={() => {
-                              if (quiz) {
-                                navigate(`/student/quiz/attempt/${lesson.lessonId}`);
-                              } else {
-                                alert('No quiz available for this lesson yet.');
-                              }
-                            }}
-                            disabled={!quiz}
-                          >
-                            {quiz ? 'Attempt Quiz' : 'No Quiz Available'}
-                          </Button>
-                        </Box>
-                      </Card>
-                    </Grid>
-                  );
-                })
-              )}
-            </Grid>
-          </>
+                        {hasQuiz ? 'Attempt Quiz' : 'No Quiz Available'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
-      </Container>
+      </div>
     </Layout>
   );
 };
