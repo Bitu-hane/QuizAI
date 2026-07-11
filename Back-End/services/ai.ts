@@ -1,6 +1,11 @@
-
 // services/ai.ts
-import { GoogleGenAI } from "@google/genai";
+import OpenAI from 'openai';
+
+// ✅ Use Groq's free endpoint
+const openai = new OpenAI({
+  baseURL: "https://api.groq.com/openai/v1",
+  apiKey: process.env.GROQ_API_KEY,
+});
 
 interface Question {
   question: string;
@@ -9,21 +14,18 @@ interface Question {
   explanation?: string;
 }
 
-// The SDK automatically reads GEMINI_API_KEY from environment
-// ✅ Correct way – read from your .env
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-// ---------------------------
-//  Generate explanation for a single wrong question
-// ---------------------------
+// Generate explanation for a single wrong question
 export const generateQuestionExplanation = async (
   question: string,
   selectedAnswer: string,
   correctAnswer: string
 ): Promise<string> => {
   try {
-    const prompt = `
-You are a helpful tutor explaining why a student's answer was wrong.
-
+    const response = await openai.chat.completions.create({
+      model: "llama-3.3-70b-versatile", // Free, fast model on Groq
+      messages: [
+        { role: "system", content: "You are a helpful tutor explaining why a student's answer was wrong." },
+        { role: "user", content: `
 Question: ${question}
 Student's answer: ${selectedAnswer}
 Correct answer: ${correctAnswer}
@@ -34,30 +36,25 @@ Provide a clear, encouraging explanation (2-3 sentences) that:
 3. Gives a tip to remember for next time
 
 Keep it concise, friendly, and educational.
-`;
-
-    const response = await ai.interactions.create({
-      model: "gemini-3.5-flash", // fast, cheap, and available on free tier
-      input: prompt,
+        `}
+      ],
+      temperature: 0.7,
+      max_tokens: 150,
     });
 
-    return response.output_text || `The correct answer is "${correctAnswer}". Review the material.`;
+    return response.choices[0]?.message?.content || `The correct answer is "${correctAnswer}". Review the material.`;
   } catch (error) {
-    console.error("Gemini explanation error:", error);
-    // Fallback if quota exceeded or network error
+    console.error("AI explanation error:", error);
     return `The correct answer is "${correctAnswer}". Review the material.`;
   }
 };
 
-// ---------------------------
-//  Generate overall feedback and recommendations
-// ---------------------------
+// Generate overall feedback and recommendations
 export const generateFeedback = async (
   score: number,
   total: number,
   wrongQuestions: Question[]
 ): Promise<{ feedback: string; recommendation: string }> => {
-  // If no wrong answers, return a positive message without calling AI
   if (wrongQuestions.length === 0) {
     return {
       feedback: "🎉 Perfect score! You answered all questions correctly. Excellent work!",
@@ -66,9 +63,11 @@ export const generateFeedback = async (
   }
 
   try {
-    const prompt = `
-You are an AI tutor analyzing a student's quiz performance.
-
+    const response = await openai.chat.completions.create({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: "You are an AI tutor analyzing a student's quiz performance." },
+        { role: "user", content: `
 Quiz Results:
 - Score: ${score}/${total}
 - Wrong questions: ${wrongQuestions.length}
@@ -87,14 +86,13 @@ Based on this performance, provide:
 Format your response as:
 FEEDBACK: [your feedback here]
 RECOMMENDATION: [your recommendation here]
-`;
-
-    const response = await ai.interactions.create({
-      model: "gemini-3.5-flash",
-      input: prompt,
+        `}
+      ],
+      temperature: 0.7,
+      max_tokens: 300,
     });
 
-    const text = response.output_text || "";
+    const text = response.choices[0]?.message?.content || "";
     const feedbackMatch = text.match(/FEEDBACK:(.*?)(RECOMMENDATION:|$)/s);
     const recMatch = text.match(/RECOMMENDATION:(.*)/s);
 
@@ -103,15 +101,12 @@ RECOMMENDATION: [your recommendation here]
 
     return { feedback, recommendation };
   } catch (error) {
-    console.error("Gemini feedback error:", error);
-    // Fallback: use static responses
+    console.error("AI feedback error:", error);
     return getFallbackFeedback(score, total, wrongQuestions);
   }
 };
 
-// ---------------------------
-//  Fallback feedback (no AI) – same as before
-// ---------------------------
+// Fallback feedback (no AI)
 function getFallbackFeedback(
   score: number,
   total: number,
