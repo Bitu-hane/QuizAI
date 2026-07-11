@@ -2,13 +2,13 @@
   "name": "back-end",
   "version": "1.0.0",
   "main": "index.js",
-"scripts": {
-  "dev": "nodemon app.ts",
-  "build": "tsc -b",
-  "start": "node dist/app.js",
-     "seed": "node dist/seed.js",
-  "test": "echo \"Error: no test specified\" && exit 1"
-},
+  "scripts": {
+    "dev": "nodemon app.ts",
+    "build": "tsc -b",
+    "start": "node dist/app.js",
+    "seed": "node dist/seed.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -25,6 +25,7 @@
     "mongoose": "^9.7.3",
     "multer": "^2.2.0",
     "nodemailer": "^9.0.3",
+    "openai": "^6.46.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0"
