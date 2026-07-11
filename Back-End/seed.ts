@@ -184,10 +184,6 @@ import Lesson from './models/Lesson';
 import Quiz from './models/Quiz';
 import Question from './models/Question';
 
-// ------------------------------------------------------------
-// CURRICULUM DATA – Grades 6–12 (Ethiopian context)
-// ------------------------------------------------------------
-
 type SubjectLessonMap = {
   [grade: number]: {
     [subject: string]: string[]; // lesson titles
