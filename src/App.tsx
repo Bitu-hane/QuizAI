@@ -216,9 +216,12 @@
 // }
 
 // export default App;
+
+
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './common/contexts/AuthContext'; // ✅ Import AuthProvider
+import { AuthProvider } from './common/contexts/AuthContext';
+import { NotificationProvider } from './common/contexts/NotificationContext'; // ✅ import
 import Login from './common/Pages/Login';
 import SignUp from './Student/SignUp';
 import Home from './Student/Home';
@@ -246,39 +249,42 @@ const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
 function App() {
   return (
-    // ✅ Wrap everything with AuthProvider
-    <AuthProvider>
-      <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/forgot-password" element={<ForgetPassword />} />
-        <Route path="/signup" element={<SignUp />} />
+    // ✅ Wrap everything with NotificationProvider (can be inside or outside AuthProvider)
+    // We'll place it outside so that notifications can be shown even before authentication.
+    <NotificationProvider>
+      <AuthProvider>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgetPassword />} />
+          <Route path="/signup" element={<SignUp />} />
 
-        {/* Student routes */}
-        <Route path="/student/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
-        <Route path="/student/quiz" element={<Quiz />} />
-        <Route path="/student/quiz/attempt/:lessonId" element={<QuizAttempt />} />
-        <Route path="/student/reports" element={<ViewReport />} />
-        <Route path="/Student/ViewReport" element={<ViewReport />} />
-        <Route path="/student/settings" element={<Setting />} />
+          {/* Student routes */}
+          <Route path="/student/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />
+          <Route path="/student/quiz" element={<Quiz />} />
+          <Route path="/student/quiz/attempt/:lessonId" element={<QuizAttempt />} />
+          <Route path="/student/reports" element={<ViewReport />} />
+          <Route path="/Student/ViewReport" element={<ViewReport />} />
+          <Route path="/student/settings" element={<Setting />} />
 
-        {/* Admin routes */}
-        <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
-        <Route path="/admin/grades" element={<PrivateRoute><ManageGrade /></PrivateRoute>} />
-        <Route path="/admin/subjects" element={<PrivateRoute><ManageSubject /></PrivateRoute>} />
-        <Route path="/admin/lessons" element={<PrivateRoute><ManageLesson /></PrivateRoute>} />
-        <Route path="/admin/quizzes" element={<PrivateRoute><ManageQuiz /></PrivateRoute>} />
-        <Route path="/admin/users" element={<PrivateRoute><ManageUser /></PrivateRoute>} />
-        <Route path="/admin/questions" element={<PrivateRoute><ManageQuestionsList /></PrivateRoute>} />
-        <Route path="/admin/quizzes/:quizId/questions" element={<PrivateRoute><ManageQuestions /></PrivateRoute>} />
-        <Route path="/admin/reports" element={<PrivateRoute><AdminReports /></PrivateRoute>} />
+          {/* Admin routes */}
+          <Route path="/admin/dashboard" element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+          <Route path="/admin/grades" element={<PrivateRoute><ManageGrade /></PrivateRoute>} />
+          <Route path="/admin/subjects" element={<PrivateRoute><ManageSubject /></PrivateRoute>} />
+          <Route path="/admin/lessons" element={<PrivateRoute><ManageLesson /></PrivateRoute>} />
+          <Route path="/admin/quizzes" element={<PrivateRoute><ManageQuiz /></PrivateRoute>} />
+          <Route path="/admin/users" element={<PrivateRoute><ManageUser /></PrivateRoute>} />
+          <Route path="/admin/questions" element={<PrivateRoute><ManageQuestionsList /></PrivateRoute>} />
+          <Route path="/admin/quizzes/:quizId/questions" element={<PrivateRoute><ManageQuestions /></PrivateRoute>} />
+          <Route path="/admin/reports" element={<PrivateRoute><AdminReports /></PrivateRoute>} />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AuthProvider>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </NotificationProvider>
   );
 }
 
