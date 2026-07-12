@@ -163,6 +163,276 @@
 
 // export default Sidebar;
 
+// import React, { useState, useEffect } from 'react';
+// import { useNavigate, useLocation } from 'react-router-dom';
+// import {
+//   Drawer,
+//   List,
+//   ListItem,
+//   ListItemIcon,
+//   ListItemText,
+//   Typography,
+//   Box,
+//   Avatar,
+//   Divider,
+//   CircularProgress,
+//   IconButton,
+// } from '@mui/material';
+
+// import DashboardIcon from '@mui/icons-material/Dashboard';
+// import QuizIcon from '@mui/icons-material/Quiz';
+// import AssessmentIcon from '@mui/icons-material/Assessment';
+// import SettingsIcon from '@mui/icons-material/Settings';
+// import LogoutIcon from '@mui/icons-material/Logout';
+// import ChevronLeft from '@mui/icons-material/ChevronLeft';
+// import ChevronRight from '@mui/icons-material/ChevronRight';
+
+// import { useAuth } from '../../common/contexts/AuthContext';
+// import API from '../../common/services/api';
+// import './Sidebar.css';
+
+// interface SidebarProps {
+//   open?: boolean;
+//   onClose?: () => void;
+//   variant?: 'permanent' | 'temporary';
+//   width?: number;
+//   collapsed?: boolean;
+//   onToggleCollapse?: () => void;
+// }
+
+// const StudentSidebar: React.FC<SidebarProps> = ({
+//   open = true,
+//   onClose = () => {},
+//   variant = 'temporary',
+//   width = 264,
+//   collapsed = false,
+//   onToggleCollapse = () => {},
+// }) => {
+//   const navigate = useNavigate();
+//   const location = useLocation();
+//   const { user, loading: authLoading } = useAuth();
+//   const [userData, setUserData] = useState<any>(user);
+//   const [loading, setLoading] = useState(true);
+
+//   const drawerWidth = collapsed ? 72 : width;
+
+//   // Fetch fresh user data on mount
+//   useEffect(() => {
+//     const fetchUserData = async () => {
+//       try {
+//         const token = localStorage.getItem('token');
+//         if (!token) {
+//           setLoading(false);
+//           return;
+//         }
+//         const res = await API.get('/auth/me');
+//         setUserData(res.data);
+//         console.log('📊 User data from sidebar:', res.data);
+//       } catch (error) {
+//         console.error('Error fetching user data:', error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     if (!authLoading) {
+//       if (user) {
+//         setUserData(user);
+//         setLoading(false);
+//         // Fetch fresh data anyway to get latest grade and image
+//         fetchUserData();
+//       } else {
+//         fetchUserData();
+//       }
+//     }
+//   }, [authLoading]);
+
+//   const menuItems = [
+//     { text: 'Dashboard', icon: <DashboardIcon />, path: '/student/dashboard' },
+//     { text: 'Quiz', icon: <QuizIcon />, path: '/student/quiz' },
+//     { text: 'Reports', icon: <AssessmentIcon />, path: '/student/reports' },
+//     { text: 'Settings', icon: <SettingsIcon />, path: '/student/settings' },
+//   ];
+
+//   // Get display name from user data
+//   const displayName = userData
+//     ? `${userData.FName || ''} ${userData.LName || ''}`.trim() || 'Student'
+//     : 'Student';
+
+//   // Get grade from user data
+//   const gradeDisplay = userData?.gradeId ? `Grade ${userData.gradeId}` : '';
+
+//   // Get profile image from PImage array
+//   const profileImage = userData?.PImage && userData.PImage.length > 0 
+//     ? userData.PImage[0] 
+//     : null;
+
+//   // Get avatar initials
+//   const getInitials = () => {
+//     if (!userData) return 'S';
+//     const first = userData.FName?.charAt(0) || '';
+//     const last = userData.LName?.charAt(0) || '';
+//     return `${first}${last}`.toUpperCase() || 'S';
+//   };
+
+//   const handleNavigate = (path: string) => {
+//     navigate(path);
+//     if (variant === 'temporary') onClose();
+//   };
+
+//   const handleLogout = () => {
+//     localStorage.removeItem('token');
+//     navigate('/login');
+//   };
+
+//   const drawerContent = (
+//     <Box className="sidebar-container">
+//       {/* HEADER - QuizAI Brand */}
+//       <Box className="sidebar-header">
+//         {!collapsed && (
+//           <Box className="brand">
+//             <Box className="brand-dot" />
+//             <Typography className="brand-text">QuizAI</Typography>
+//           </Box>
+//         )}
+//         {collapsed && (
+//           <Box className="brand">
+//             <Box className="brand-dot" />
+//           </Box>
+//         )}
+
+//         {variant === 'permanent' && (
+//           <IconButton onClick={onToggleCollapse} className="collapse-btn">
+//             {collapsed ? <ChevronRight /> : <ChevronLeft />}
+//           </IconButton>
+//         )}
+//       </Box>
+
+//       {/* USER INFO */}
+//       <Box className="user-info">
+//         {loading || authLoading ? (
+//           <CircularProgress size={28} sx={{ color: '#C0392B' }} />
+//         ) : (
+//           <>
+//             <Avatar
+//               src={profileImage || undefined}
+//               className="user-avatar"
+//               sx={{
+//                 bgcolor: profileImage ? 'transparent' : '#1B2430',
+//                 border: '2px solid #C0392B',
+//                 fontFamily: "'Space Grotesk', sans-serif",
+//                 fontWeight: 700,
+//                 fontSize: 15,
+//                 width: 44,
+//                 height: 44,
+//               }}
+//             >
+//               {!profileImage && getInitials()}
+//             </Avatar>
+
+//             {!collapsed && (
+//               <Box className="user-details">
+//                 <Typography className="user-name">
+//                   {displayName || 'Student'}
+//                 </Typography>
+//                 <Typography className="user-grade">
+//                   {gradeDisplay || 'No grade assigned'}
+//                 </Typography>
+//               </Box>
+//             )}
+//           </>
+//         )}
+//       </Box>
+
+//       <Divider className="sidebar-divider" />
+
+//       {/* MENU */}
+//       <List className="menu-list">
+//         {menuItems.map((item) => {
+//           const active = location.pathname === item.path;
+
+//           return (
+//             <ListItem
+//               key={item.text}
+//               onClick={() => handleNavigate(item.path)}
+//               className={`menu-item ${active ? 'active' : ''}`}
+//               sx={{
+//                 justifyContent: collapsed ? 'center' : 'flex-start',
+//               }}
+//             >
+//               <ListItemIcon
+//                 className={`menu-icon ${active ? 'active' : ''}`}
+//                 sx={{
+//                   minWidth: collapsed ? 0 : 40,
+//                 }}
+//               >
+//                 {item.icon}
+//               </ListItemIcon>
+
+//               {!collapsed && (
+//                 <ListItemText
+//                   primary={item.text}
+//                   className={`menu-text ${active ? 'active' : ''}`}
+//                 />
+//               )}
+//             </ListItem>
+//           );
+//         })}
+//       </List>
+
+//       <Divider className="sidebar-divider" />
+
+//       {/* LOGOUT */}
+//       <List className="logout-list">
+//         <ListItem
+//           onClick={handleLogout}
+//           className="logout-item"
+//           sx={{
+//             justifyContent: collapsed ? 'center' : 'flex-start',
+//           }}
+//         >
+//           <ListItemIcon
+//             className="logout-icon"
+//             sx={{
+//               minWidth: collapsed ? 0 : 40,
+//             }}
+//           >
+//             <LogoutIcon />
+//           </ListItemIcon>
+
+//           {!collapsed && (
+//             <ListItemText primary="Logout" className="logout-text" />
+//           )}
+//         </ListItem>
+//       </List>
+//     </Box>
+//   );
+
+//   return (
+//     <Drawer
+//       variant={variant}
+//       open={open}
+//       onClose={onClose}
+//       className="sidebar-drawer"
+//       sx={{
+//         width: drawerWidth,
+//         flexShrink: 0,
+//         '& .MuiDrawer-paper': {
+//           width: drawerWidth,
+//           boxSizing: 'border-box',
+//           borderRight: '1px solid rgba(27,36,48,0.12)',
+//           overflowX: 'hidden',
+//           transition: 'width 0.25s ease',
+//           backgroundColor: '#fff',
+//         },
+//       }}
+//     >
+//       {drawerContent}
+//     </Drawer>
+//   );
+// };
+
+// export default StudentSidebar;
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -177,6 +447,12 @@ import {
   Divider,
   CircularProgress,
   IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from '@mui/material';
 
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -213,6 +489,9 @@ const StudentSidebar: React.FC<SidebarProps> = ({
   const { user, loading: authLoading } = useAuth();
   const [userData, setUserData] = useState<any>(user);
   const [loading, setLoading] = useState(true);
+
+  // State for logout confirmation dialog
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const drawerWidth = collapsed ? 72 : width;
 
@@ -280,7 +559,19 @@ const StudentSidebar: React.FC<SidebarProps> = ({
     if (variant === 'temporary') onClose();
   };
 
+  // Open the logout confirmation dialog
+  const openLogoutDialog = () => {
+    setLogoutDialogOpen(true);
+  };
+
+  // Close the dialog without logging out
+  const closeLogoutDialog = () => {
+    setLogoutDialogOpen(false);
+  };
+
+  // Perform logout after confirmation
   const handleLogout = () => {
+    setLogoutDialogOpen(false);
     localStorage.removeItem('token');
     navigate('/login');
   };
@@ -385,10 +676,11 @@ const StudentSidebar: React.FC<SidebarProps> = ({
       {/* LOGOUT */}
       <List className="logout-list">
         <ListItem
-          onClick={handleLogout}
+          onClick={openLogoutDialog} // ✅ Open dialog instead of direct logout
           className="logout-item"
           sx={{
             justifyContent: collapsed ? 'center' : 'flex-start',
+            cursor: 'pointer',
           }}
         >
           <ListItemIcon
@@ -405,6 +697,65 @@ const StudentSidebar: React.FC<SidebarProps> = ({
           )}
         </ListItem>
       </List>
+
+      {/* ===== LOGOUT CONFIRMATION DIALOG ===== */}
+    <Dialog
+  open={logoutDialogOpen}
+  onClose={closeLogoutDialog}
+  aria-labelledby="logout-dialog-title"
+  aria-describedby="logout-dialog-description"
+  sx={{
+    '& .MuiPaper-root': {
+      borderRadius: 3,
+      padding: 1,
+      maxWidth: 420,
+    },
+  }}
+>
+  <DialogTitle id="logout-dialog-title" sx={{ fontWeight: 700 }}>
+    Confirm Logout
+  </DialogTitle>
+  <DialogContent>
+    <DialogContentText id="logout-dialog-description" sx={{ fontSize: '15px', color: '#4B5563' }}>
+      Are you sure you want to log out? You'll need to sign in again to access your account.
+    </DialogContentText>
+  </DialogContent>
+  <DialogActions sx={{ padding: '8px 24px 20px', gap: 1 }}>
+    <Button
+      onClick={closeLogoutDialog}
+      variant="outlined"
+      sx={{
+        borderColor: '#1B2430',
+        color: '#1B2430',
+        borderRadius: '5px',
+        fontWeight: 600,
+        padding: '8px 20px',
+        '&:hover': {
+          borderColor: '#1B2430',
+          background: 'rgba(27,36,48,0.04)',
+        },
+      }}
+    >
+      Cancel
+    </Button>
+    <Button
+      onClick={handleLogout}
+      variant="contained"
+      sx={{
+        bgcolor: '#C0392B',
+        color: '#fff',
+        borderRadius: '5px',
+        fontWeight: 600,
+        padding: '8px 20px',
+        '&:hover': {
+          bgcolor: '#A93226',
+        },
+      }}
+    >
+      Logout
+    </Button>
+  </DialogActions>
+</Dialog>
     </Box>
   );
 
@@ -433,7 +784,6 @@ const StudentSidebar: React.FC<SidebarProps> = ({
 };
 
 export default StudentSidebar;
-
 
 // import React from 'react';
 // import { useNavigate, useLocation } from 'react-router-dom';
