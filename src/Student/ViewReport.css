@@ -393,3 +393,59 @@ h3.section {
     gap: 8px;
   }
 }
+
+
+/* Quiz Attempts List */
+.quiz-attempts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attempt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 1px solid rgba(27, 36, 48, 0.08);
+  border-radius: 6px;
+  background: #fff;
+  transition: box-shadow 0.15s ease;
+}
+.attempt-item:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.attempt-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attempt-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+  font-size: 15px;
+}
+.attempt-lesson {
+  font-weight: 400;
+  font-size: 14px;
+  color: #4B5563;
+}
+
+.attempt-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: #4B5563;
+}
+.attempt-meta .passed {
+  color: #2E7D52;
+}
+.attempt-meta .failed {
+  color: #C0392B;
+}

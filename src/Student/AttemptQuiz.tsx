@@ -1096,8 +1096,7 @@ const QuizAttempt: React.FC = () => {
           <div className="action-buttons">
             <button className="quiz-btn-outline" onClick={handleBackToLessons}>Back to Quizzes</button>
             <button className="quiz-btn" onClick={() => navigate('/student/reports')}>View Reports</button>
-            <button className="quiz-btn" style={{ background: '#2E7D52', borderColor: '#2E7D52' }} onClick={() => navigate(`/student/quiz/${lessonId}`)}>Retry Quiz</button>
-          </div>
+<button className="quiz-btn" style={{ background: '#2E7D52', borderColor: '#2E7D52' }} onClick={() => navigate('/student/quiz')}>Retry Quiz</button>          </div>
         </div>
       </Layout>
     );
