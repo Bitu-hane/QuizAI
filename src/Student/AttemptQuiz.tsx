@@ -854,7 +854,7 @@ const QuizAttempt: React.FC = () => {
   const [error, setError] = useState('');
   const [result, setResult] = useState<QuizResult | null>(null);
   const [showExplanations, setShowExplanations] = useState(false);
-
+const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchQuiz = async () => {
@@ -903,84 +903,95 @@ const QuizAttempt: React.FC = () => {
     setAnswers((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  const handleSubmitQuiz = async () => {
-    if (!quizData) return;
-    const totalQuestions = quizData.quiz.questions.length;
-    const answeredCount = Object.keys(answers).length;
-    if (answeredCount < totalQuestions && (timeLeft === null || timeLeft > 0)) {
-      if (!window.confirm(`You've answered ${answeredCount}/${totalQuestions} questions. Submit anyway?`)) {
-        return;
-      }
+ const handleSubmitQuiz = async () => {
+  if (submitting) return;
+  if (!quizData) return;
+
+  const totalQuestions = quizData.quiz.questions.length;
+  const answeredCount = Object.keys(answers).length;
+  if (answeredCount < totalQuestions && (timeLeft === null || timeLeft > 0)) {
+    if (!window.confirm(`You've answered ${answeredCount}/${totalQuestions} questions. Submit anyway?`)) {
+      return;
     }
+  }
 
-    const payload = {
-      quizId: quizData.quiz.quizId,
-      answers: Object.entries(answers).map(([qId, ans]) => ({
-        questionId: Number(qId),
-        selectedAnswer: ans,
-      })),
-      timeTaken: quizData.timelimit ? (quizData.timelimit * 60 - (timeLeft || 0)) : 0,
-    };
+  setSubmitting(true);
 
-    try {
-      const response = await API.post('/quizzes/submit', payload);
-      const data = response.data;
-      
-      const answerDetails: AnswerDetail[] = data.answers.map((ans: any) => {
-        const question = quizData.quiz.questions.find(q => q.questionId === ans.questionId);
-        return {
-          questionId: ans.questionId,
-          question: question?.question || 'Unknown question',
-          selectedAnswer: ans.selectedAnswer,
-          correctAnswer: ans.correctAnswer || 'N/A',
-          isCorrect: ans.isCorrect,
-          explanation: ans.explanation || 'No explanation available.',
-        };
-      });
-
-      const percentage = (data.score / answerDetails.length) * 100;
-      const topics = quizData.quiz.questions.map((q) => q.topic || 'General');
-      const topicPerformance: { [key: string]: { correct: number; total: number } } = {};
-      answerDetails.forEach((detail, index) => {
-        const topic = topics[index] || 'General';
-        if (!topicPerformance[topic]) {
-          topicPerformance[topic] = { correct: 0, total: 0 };
-        }
-        topicPerformance[topic].total++;
-        if (detail.isCorrect) {
-          topicPerformance[topic].correct++;
-        }
-      });
-
-      const strengths = Object.entries(topicPerformance)
-        .filter(([_, perf]) => (perf.correct / perf.total) >= 0.7)
-        .map(([topic]) => topic);
-
-      const weaknesses = Object.entries(topicPerformance)
-        .filter(([_, perf]) => (perf.correct / perf.total) < 0.5)
-        .map(([topic]) => topic);
-
-      setResult({
-        score: data.score,
-        totalQuestions: answerDetails.length,
-        percentage,
-        aiFeedback: data.feedback || data.aiFeedback || 'Great effort! Keep practicing to improve further.',
-        aiExplanation: data.aiExplanation || 'Based on your answers, focus on the areas where you made mistakes.',
-        recommendation: data.recommendation || data.recommendLesson || 'Review the topics you found challenging.',
-        strengths,
-        weaknesses,
-        answerDetails,
-        quizTitle: quizData.quiz.title,
-      });
-      
-      setQuizSubmitted(true);
-      showSuccess('Quiz submitted successfully!');
-    } catch (error) {
-      console.error('Error submitting quiz:', error);
-      showError('Failed to submit quiz. Please try again.');
-    }
+  const payload = {
+    quizId: quizData.quiz.quizId,
+    answers: Object.entries(answers).map(([qId, ans]) => ({
+      questionId: Number(qId),
+      selectedAnswer: ans,
+    })),
+    timeTaken: quizData.timelimit ? (quizData.timelimit * 60 - (timeLeft || 0)) : 0,
   };
 
+  try {
+    const response = await API.post('/quizzes/submit', payload);
+    const data = response.data;
+
+    // ✅ Build answer details from response
+    const answerDetails: AnswerDetail[] = data.answers.map((ans: any) => {
+      const question = quizData.quiz.questions.find(q => q.questionId === ans.questionId);
+      return {
+        questionId: ans.questionId,
+        question: question?.question || 'Unknown question',
+        selectedAnswer: ans.selectedAnswer,
+        correctAnswer: ans.correctAnswer || 'N/A',
+        isCorrect: ans.isCorrect,
+        explanation: ans.explanation || 'No explanation available.',
+      };
+    });
+
+    const percentage = (data.score / answerDetails.length) * 100;
+
+    // ✅ Calculate strengths & weaknesses based on topics
+    const topics = quizData.quiz.questions.map((q) => q.topic || 'General');
+    const topicPerformance: { [key: string]: { correct: number; total: number } } = {};
+    answerDetails.forEach((detail, index) => {
+      const topic = topics[index] || 'General';
+      if (!topicPerformance[topic]) {
+        topicPerformance[topic] = { correct: 0, total: 0 };
+      }
+      topicPerformance[topic].total++;
+      if (detail.isCorrect) {
+        topicPerformance[topic].correct++;
+      }
+    });
+
+    const strengths = Object.entries(topicPerformance)
+      .filter(([_, perf]) => (perf.correct / perf.total) >= 0.7)
+      .map(([topic]) => topic);
+
+    const weaknesses = Object.entries(topicPerformance)
+      .filter(([_, perf]) => (perf.correct / perf.total) < 0.5)
+      .map(([topic]) => topic);
+
+    // ✅ Set result
+    setResult({
+      score: data.score,
+      totalQuestions: answerDetails.length,
+      percentage,
+      aiFeedback: data.feedback || data.aiFeedback || 'Great effort! Keep practicing to improve further.',
+      aiExplanation: data.aiExplanation || 'Based on your answers, focus on the areas where you made mistakes.',
+      recommendation: data.recommendation || data.recommendLesson || 'Review the topics you found challenging.',
+      strengths,
+      weaknesses,
+      answerDetails,
+      quizTitle: quizData.quiz.title,
+    });
+
+    // ✅ Mark as submitted – this triggers the results view
+    setQuizSubmitted(true);
+    showSuccess('Quiz submitted successfully!');
+
+  } catch (error) {
+    console.error('Error submitting quiz:', error);
+    showError('Failed to submit quiz. Please try again.');
+  } finally {
+    setSubmitting(false);
+  }
+};
   const handleBackToLessons = () => {
     navigate('/student/quiz');
   };
@@ -1182,9 +1193,13 @@ const QuizAttempt: React.FC = () => {
               Previous
             </button>
             {currentQuestion === totalQuestions - 1 ? (
-              <button className="quiz-btn" onClick={handleSubmitQuiz}>
-                Submit Quiz
-              </button>
+            <button
+  className="quiz-btn"
+  onClick={handleSubmitQuiz}
+  disabled={submitting}
+>
+  {submitting ? 'Submitting...' : 'Submit Quiz'}
+</button>
             ) : (
               <button className="quiz-btn" onClick={() => setCurrentQuestion(prev => prev + 1)}>
                 Next

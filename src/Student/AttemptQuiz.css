@@ -165,6 +165,10 @@
   color: #64748B;
   transition: background 0.15s ease, color 0.15s ease;
 }
+.progress-dot:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
 
 .progress-dot.answered {
   background: #7C3AED;
