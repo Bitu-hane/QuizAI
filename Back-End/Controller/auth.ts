@@ -723,6 +723,7 @@ export const getMe = async (req: any, res: Response) => {
 // ==========================
 // 5. Forgot Password (Request OTP)
 // ==========================
+
 import { sendOTPEmail } from '../services/email';
 
 export const forgotPassword = async (req: Request, res: Response) => {
@@ -749,12 +750,15 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     await ResetOTP.create({ email, otp, expiresAt });
 
-    // ✅ Send email
-    await sendOTPEmail(email, otp);
-
+    // ✅ TEMPORARY: Log OTP to console instead of sending email
     console.log(`🔑 OTP for ${email}: ${otp}`);
+    console.log('ℹ️ Email sending is bypassed (Resend requires domain verification). Use this OTP to complete reset.');
 
-    res.json({ message: 'OTP sent to your email' });
+    // ✅ Uncomment this line when domain is verified
+// In forgotPassword, after creating ResetOTP record:
+await sendOTPEmail(email, otp);
+console.log(`🔑 OTP for ${email}: ${otp}`);
+    res.json({ message: 'OTP generated. Check server logs for the code.' });
   } catch (error) {
     console.error('Forgot password error:', error);
     res.status(500).json({ message: 'Server error' });

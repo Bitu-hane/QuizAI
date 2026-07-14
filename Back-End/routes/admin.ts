@@ -344,7 +344,11 @@ import {
 } from '../Controller/admin';
 import { protect } from '../middleware/auth';
 import { authorize } from '../middleware/role';
-
+import {
+  // ... existing imports ...
+  getAllResults,
+  getAllProgress
+} from '../Controller/admin';
 const router = express.Router();
 
 router.use(protect);
@@ -383,7 +387,8 @@ router.get('/quizzes/:quizId/questions', getQuestionsByQuiz);
 router.post('/quizzes/:quizId/questions', addQuestionToQuiz);
 router.put('/questions/:id', updateQuestion);
 router.delete('/questions/:id', deleteQuestion);
-
+router.get('/results', getAllResults);
+router.get('/progress', getAllProgress);
 // Users
 router.get('/users', getUsers);
 router.put('/users/:id', updateUser);

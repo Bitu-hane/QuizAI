@@ -11,6 +11,7 @@ import UserRole from '../models/UserRole';
 import Role from '../models/Role';
 import QuizResult from '../models/QuizResult';
 import Permission from '../models/Permission';
+import StudentProgress from '../models/StudentProgress';
 
 // ===========================
 // Grades
@@ -466,6 +467,32 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('❌ Error fetching dashboard stats:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ===========================
+// Admin: Get all quiz results (across all students)
+// ===========================
+export const getAllResults = async (req: Request, res: Response) => {
+  try {
+    const results = await QuizResult.find({}).sort({ takeTime: -1 });
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching all results:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// ===========================
+// Admin: Get all student progress
+// ===========================
+export const getAllProgress = async (req: Request, res: Response) => {
+  try {
+    const progress = await StudentProgress.find({});
+    res.json(progress);
+  } catch (error) {
+    console.error('Error fetching all progress:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
