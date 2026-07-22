@@ -276,7 +276,8 @@ import StudentSidebar from './components/Sidebar';
 import API from '../common/services/api';
 import useNotification from '../common/hooks/useNotification';
 import './Quiz.css';
-
+import UnlockModal from './components/UnlockModal';
+import { useAuth } from '../common/contexts/AuthContext';
 interface Subject {
   _id: string;
   subjectId: number;
@@ -301,6 +302,8 @@ interface Quiz {
   timelimit?: number;
   difficulty?: number;
   questions: number[];
+   isLocked?: boolean;   // ✅ ADD THIS
+  price?: number;
 }
 
 const Quiz: React.FC = () => {
@@ -312,8 +315,18 @@ const Quiz: React.FC = () => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [selectedSubject, setSelectedSubject] = useState<number | null>(null);
   const [studentGrade, setStudentGrade] = useState<number | null>(null);
+  const [purchasedDifficulties, setPurchasedDifficulties] = useState<number[]>([]);
+const [isPremium, setIsPremium] = useState(false);
   const [error, setError] = useState('');
-
+  const { user } = useAuth();
+const [unlockModalOpen, setUnlockModalOpen] = useState(false);
+const [selectedQuiz, setSelectedQuiz] = useState<{
+  quizId: number;
+  difficulty: number;
+  price: number;
+   lessonId: number;
+  title: string;
+} | null>(null);
   useEffect(() => {
     fetchStudentData();
   }, []);
@@ -324,7 +337,8 @@ const Quiz: React.FC = () => {
       const userRes = await API.get('/auth/me');
       const user = userRes.data;
       setStudentGrade(user.gradeId);
-
+setPurchasedDifficulties(user.purchasedDifficulties || []);
+      setIsPremium(user.isPremium || false);
       if (!user.gradeId) {
         const msg = 'Please complete your onboarding to select a grade.';
         setError(msg);
@@ -354,10 +368,35 @@ const Quiz: React.FC = () => {
   const subjectLessons = selectedSubject
     ? lessons.filter(l => l.subjectId === selectedSubject)
     : [];
-
+const openUnlockModal = (quiz: any, lessonId: number) => {
+  setSelectedQuiz({
+    quizId: quiz.quizId,
+    difficulty: quiz.difficulty,
+    price: quiz.price,
+    title: quiz.title,
+    lessonId: lessonId, // ✅ Add this
+  });
+  setUnlockModalOpen(true);
+};
   const getQuizForLesson = (lessonId: number) => {
-    return quizzes.find(q => q.lessonId === lessonId);
+  const quiz = quizzes.find(q => q.lessonId === lessonId);
+  if (!quiz) return null;
+  
+  const difficulty = quiz.difficulty || 1;
+  
+  // ✅ Check if user has purchased this difficulty or has premium
+  const isLocked = difficulty >= 3 && 
+                   !user?.isPremium && 
+                   !(user?.purchasedDifficulties || []).includes(difficulty);
+  
+  const price = difficulty === 3 ? 500 : difficulty === 4 ? 700 : difficulty === 5 ? 1000 : 0;
+  
+  return {
+    ...quiz,
+    isLocked,
+    price,
   };
+};
 
   if (loading) {
     return (
@@ -497,21 +536,35 @@ const Quiz: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <div className="lesson-action">
-                      <button
-                        className="quiz-btn"
-                        disabled={!hasQuiz}
-                        onClick={() => {
-                          if (hasQuiz) {
-                            navigate(`/student/quiz/attempt/${lesson.lessonId}`);
-                          } else {
-                            showInfo('No quiz available for this lesson yet.');
-                          }
-                        }}
-                      >
-                        {hasQuiz ? 'Attempt Quiz' : 'No Quiz Available'}
-                      </button>
-                    </div>
+                   <div className="lesson-action">
+  {hasQuiz && quiz.isLocked ? (
+    <button
+      className="quiz-btn lock-btn"
+      onClick={() => openUnlockModal(quiz, lesson.lessonId)}
+      style={{
+        background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+        color: 'white',
+        border: 'none',
+      }}
+    >
+      🔒 Unlock for {quiz.price} ETB
+    </button>
+  ) : (
+    <button
+      className="quiz-btn"
+      disabled={!hasQuiz}
+      onClick={() => {
+        if (hasQuiz) {
+          navigate(`/student/quiz/attempt/${lesson.lessonId}`);
+        } else {
+          showInfo('No quiz available for this lesson yet.');
+        }
+      }}
+    >
+      {hasQuiz ? 'Attempt Quiz' : 'No Quiz Available'}
+    </button>
+  )}
+</div>
                   </div>
                 );
               })
@@ -519,6 +572,18 @@ const Quiz: React.FC = () => {
           </div>
         )}
       </div>
+      {/* Unlock Modal */}
+<UnlockModal
+  open={unlockModalOpen}
+  onClose={() => setUnlockModalOpen(false)}
+  difficulty={selectedQuiz?.difficulty || 0}
+  price={selectedQuiz?.price || 0}
+  lessonId={selectedQuiz?.lessonId || 0} // ✅ Pass lessonId
+  onSuccess={() => {
+    setUnlockModalOpen(false);
+    fetchStudentData();
+  }}
+/>
     </Layout>
   );
 };

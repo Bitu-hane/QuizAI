@@ -241,7 +241,7 @@ import Onboarding from './common/Pages/Onboarding';
 import ManageQuestions from './Admin/ManageQuestion';
 import ManageQuestionsList from './Admin/ManageQuestionsLisrt';
 import AdminReports from './Admin/AdminReport';
-
+import PaymentSuccess from './common/Pages/PaymentSuccess';
 const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('token');
   return token ? <>{children}</> : <Navigate to="/login" replace />;
@@ -259,7 +259,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgetPassword />} />
           <Route path="/signup" element={<SignUp />} />
-
+<Route path="/payment/success" element={<PaymentSuccess />} />
           {/* Student routes */}
           <Route path="/student/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
           <Route path="/onboarding" element={<PrivateRoute><Onboarding /></PrivateRoute>} />

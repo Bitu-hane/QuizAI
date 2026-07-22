@@ -574,6 +574,477 @@
 // // };
 
 // // export default Dashboard;
+
+
+
+
+
+// import React, { useState, useEffect } from 'react';
+// import { useNavigate } from 'react-router-dom';
+// import {
+//   Typography,
+//   CircularProgress,
+// } from '@mui/material';
+// import {
+//   TrendingUp,
+//   School,
+//   Assignment,
+//   EmojiEvents,
+//   TrendingDown,
+// } from '@mui/icons-material';
+// import Layout from '../common/component/layout'; // ✅ Import Layout
+// import StudentSidebar from './components/Sidebar';
+// import API from '../common/services/api';
+// import './StudentDashboard.css';
+
+// // ----- Types -----
+// interface User {
+//   _id: string;
+//   FName: string;
+//   MName: string;
+//   LName: string;
+//   email: string;
+//   gradeId: number;
+// }
+
+// interface QuizResult {
+//   _id: string;
+//   resultId: number;
+//   quizId: number;
+//   score: number;
+//   totalQuestions: number;
+//   takeTime: string;
+//   subject?: string;
+//   lesson?: string;
+// }
+
+
+
+// // ----- Component -----
+// const Dashboard: React.FC = () => {
+//   const navigate = useNavigate();
+
+//   // Data state
+//   const [loading, setLoading] = useState(true);
+//   const [profile, setProfile] = useState<User | null>(null);
+//   const [results, setResults] = useState<QuizResult[]>([]);
+
+//   const [stats, setStats] = useState({
+//     totalQuizzes: 0,
+//     averageScore: 0,
+//     subjectsPassed: 0,
+//     studyStreak: 0,
+//   });
+//   const [recentQuizzes, setRecentQuizzes] = useState<QuizResult[]>([]);
+//   const [subjectPerformance, setSubjectPerformance] = useState<
+//     { name: string; progress: number; color: string; trend: 'up' | 'down' }[]
+//   >([]);
+//   const [strengths, setStrengths] = useState<string[]>([]);
+//   const [weaknesses, setWeaknesses] = useState<string[]>([]);
+
+//   // Redirect if onboarding not completed
+//   useEffect(() => {
+//     const user = JSON.parse(localStorage.getItem('user') || '{}');
+//     if (user && !user.onboardingCompleted) {
+//       navigate('/onboarding');
+//     }
+//   }, []);
+
+//   // Fetch dashboard data
+//   useEffect(() => {
+//    const fetchDashboardData = async () => {
+//   setLoading(true);
+//   try {
+//     // 1. User profile
+//     const userRes = await API.get('/auth/me');
+//     const userData = userRes.data;
+//     setProfile(userData);
+
+//     // 2. Get overall progress summary
+//     const summaryRes = await API.get('/progress/overall');
+//     const summary = summaryRes.data;
+
+//     // 3. Get subject performance (all subjects the student has studied)
+//     const subjectRes = await API.get('/progress/subjects');
+//     const subjectData = subjectRes.data;
+
+//     // 4. Get recent quiz history
+//     const historyRes = await API.get('/progress/history');
+//     const historyData = historyRes.data;
+
+//     // ----- Compute stats from real data -----
+//     const totalQuizzes = summary.totalQuizzes || 0;
+//     const avgScore = summary.averageScore || 0;
+//     const subjectsPassed = subjectData.filter((s: any) => s.quizPassed > 0 && s.quizPassed / s.quizTaken >= 0.7).length;
+//     const studyStreak = calculateStudyStreak(historyData);
+
+//     // Subject performance with trends
+//     const perf = await Promise.all(subjectData.map(async (s: any) => {
+//       // Get subject name
+//       let subjectName = `Subject ${s.subjectId}`;
+//       try {
+//         const subjectRes = await API.get(`/subjects/${s.subjectId}`);
+//         subjectName = subjectRes.data.name || subjectName;
+//       } catch (e) {
+//         // Fallback
+//       }
+      
+//       const progress = s.quizTaken > 0 ? Math.round((s.quizPassed / s.quizTaken) * 100) : 0;
+//       const colors = ['#C0392B', '#3B6EA5', '#2E7D52', '#C99A2E', '#7C3AED', '#E8735F'];
+//       const color = colors[(s.subjectId - 1) % colors.length];
+//       const trend: 'up' | 'down' = progress >= 70 ? 'up' : 'down';
+      
+//       return { name: subjectName, progress, color, trend };
+//     }));
+
+//     // Strengths & Weaknesses from subject data
+//     const strengths: string[] = [];
+//     const weaknesses: string[] = [];
+//     subjectData.forEach((s: any) => {
+//       const progress = s.quizTaken > 0 ? (s.quizPassed / s.quizTaken) * 100 : 0;
+//       if (progress >= 70) strengths.push(`Subject ${s.subjectId}`);
+//       if (progress < 50) weaknesses.push(`Subject ${s.subjectId}`);
+//     });
+
+//     // Recent quizzes from history
+//     const recent = historyData.slice(0, 4).map((h: any) => ({
+//       _id: h._id,
+//       quizId: h.quizId,
+//       score: h.percentage,
+//       totalQuestions: h.totalQuestions,
+//       takeTime: h.createdAt || new Date().toISOString(),
+//       status: h.status === 'Passed' ? 'passed' : 'failed',
+//     }));
+
+//     setStats({
+//       totalQuizzes,
+//       averageScore: avgScore,
+//       subjectsPassed,
+//       studyStreak,
+//     });
+//     setRecentQuizzes(recent);
+//     setSubjectPerformance(perf);
+//     setStrengths(strengths.length ? strengths : ['No strengths recorded yet']);
+//     setWeaknesses(weaknesses.length ? weaknesses : ['No weaknesses recorded yet']);
+
+//   } catch (error) {
+//     console.error('Error loading dashboard:', error);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+// // Helper: Calculate study streak from history
+// const calculateStudyStreak = (history: any[]) => {
+//   if (!history || history.length === 0) return 0;
+  
+//   let streak = 0;
+//   let currentDate = new Date();
+//   currentDate.setHours(0, 0, 0, 0);
+  
+//   // Get unique dates when quizzes were taken
+//   const dates = history.map((h: any) => {
+//     const d = new Date(h.createdAt || h.takeTime);
+//     d.setHours(0, 0, 0, 0);
+//     return d.getTime();
+//   });
+//   const uniqueDates = [...new Set(dates)].sort((a, b) => b - a);
+  
+//   // Check if today or yesterday was the last activity
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+//   const yesterday = new Date(today);
+//   yesterday.setDate(yesterday.getDate() - 1);
+  
+//   const lastDate = new Date(uniqueDates[0]);
+//   lastDate.setHours(0, 0, 0, 0);
+  
+//   if (lastDate.getTime() === today.getTime() || lastDate.getTime() === yesterday.getTime()) {
+//     // Count consecutive days
+//     let expectedDate = new Date(lastDate);
+//     for (const date of uniqueDates) {
+//       const d = new Date(date);
+//       d.setHours(0, 0, 0, 0);
+//       if (d.getTime() === expectedDate.getTime()) {
+//         streak++;
+//         expectedDate.setDate(expectedDate.getDate() - 1);
+//       } else {
+//         break;
+//       }
+//     }
+//   }
+//   return streak;
+// };
+
+//     fetchDashboardData();
+//   }, []);
+
+//   if (loading) {
+//     return (
+//       <Layout title="Dashboard" sidebar={<StudentSidebar />}>
+//         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+//           <CircularProgress />
+//         </div>
+//       </Layout>
+//     );
+//   }
+
+//   if (!profile) {
+//     return (
+//       <Layout title="Dashboard" sidebar={<StudentSidebar />}>
+//         <Typography variant="h6" color="error">Failed to load profile. Please log in again.</Typography>
+//       </Layout>
+//     );
+//   }
+
+
+  
+
+//   // ----- Stats cards -----
+//   const statsCards = [
+//     {
+//       title: 'Total Quizzes',
+//       value: String(stats.totalQuizzes),
+//       icon: <Assignment sx={{ color: '#C0392B' }} />,
+//       bgColor: 'ic-red',
+//       change: '+12%',
+//     },
+//     {
+//       title: 'Average Score',
+//       value: `${stats.averageScore}%`,
+//       icon: <TrendingUp sx={{ color: '#2E7D52' }} />,
+//       bgColor: 'ic-green',
+//       change: '+5%',
+//     },
+//     {
+//       title: 'Subjects Passed',
+//       value: `${stats.subjectsPassed}/${subjectPerformance.length}`,
+//       icon: <School sx={{ color: '#3B6EA5' }} />,
+//       bgColor: 'ic-blue',
+//       change: '+2',
+//     },
+//     {
+//       title: 'Study Streak',
+//       value: String(stats.studyStreak),
+//       icon: <EmojiEvents sx={{ color: '#C99A2E' }} />,
+//       bgColor: 'ic-gold',
+//       change: '🔥 days',
+//     },
+//   ];
+
+//   return (
+//     <Layout title="Dashboard" sidebar={<StudentSidebar />}>
+//       {/* ----- Welcome ----- */}
+//       <div className="page-head">
+//         <div>
+//           <h1>Welcome back, {profile.FName}! 👋</h1>
+//           <p>Here's your comprehensive learning progress overview.</p>
+//         </div>
+//         <div className="pill">
+//           <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+//             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+//             <path d="M12 7V12L15 14.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+//           </svg>
+//           Last active: Today
+//         </div>
+//       </div>
+
+//       {/* ----- Stats Cards ----- */}
+//       <div className="stats">
+//         {statsCards.map((stat, idx) => (
+//           <div className="stat-card" key={idx}>
+//             <div className="stat-top">
+//               <span className="stat-label">{stat.title}</span>
+//               <div className={`stat-icon ${stat.bgColor}`}>
+//                 {stat.icon}
+//               </div>
+//             </div>
+//             <div className="stat-num">{stat.value}</div>
+//             <div className="stat-delta up">
+//               {stat.change} <span className="flat">vs last month</span>
+//             </div>
+//           </div>
+//         ))}
+//       </div>
+
+//       {/* ----- Main Content ----- */}
+//       <div className="two-col">
+//         {/* Left column */}
+//         <div className="stack">
+//           {/* Subject Performance */}
+//           <div className="panel">
+//             <div className="panel-head">
+//               <h3>Subject Performance</h3>
+//               <a href="#" onClick={() => navigate('/student/reports')}>VIEW ALL →</a>
+//             </div>
+//             <p className="sub">Track your progress across all subjects</p>
+//             <div className="subject-grid">
+//               {subjectPerformance.map((subj, idx) => (
+//                 <div className="subject-row" key={idx}>
+//                   <div className="subject-name">
+//                     <span className="dot" style={{ background: subj.color }}></span>
+//                     <span>{subj.name}</span>
+//                   </div>
+//                   <div className="subject-score">
+//                     <span>{subj.progress}%</span>
+//                     {subj.trend === 'up' ? (
+//                       <TrendingUp sx={{ color: '#2E7D52', fontSize: 16 }} />
+//                     ) : (
+//                       <TrendingDown sx={{ color: '#C0392B', fontSize: 16 }} />
+//                     )}
+//                   </div>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+
+//           {/* Recent Quizzes */}
+//           <div className="panel">
+//             <div className="panel-head">
+//               <h3>Recent Quizzes</h3>
+//               <a href="#" onClick={() => navigate('/student/reports')}>VIEW ALL →</a>
+//             </div>
+//             <p className="sub">Your latest quiz attempts</p>
+//             {recentQuizzes.length === 0 ? (
+//               <div className="empty">
+//                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+//                   <rect x="5" y="3" width="14" height="18" rx="1.5" stroke="#9AA3AE" strokeWidth="1.6" strokeDasharray="3 3" />
+//                 </svg>
+//                 No quizzes taken yet. Start a quiz now!
+//               </div>
+//             ) : (
+//               <div className="quiz-list">
+//                 {recentQuizzes.map((q) => {
+//                   const passed = q.score >= 70;
+//                   return (
+//                     <div className="quiz-item" key={q._id}>
+//                       <div className="quiz-icon">
+//                         <School />
+//                       </div>
+//                       <div className="quiz-info">
+//                         <div className="quiz-title">
+//                           <span>Quiz {q.quizId}</span>
+//                           <span className="quiz-score" style={{ color: passed ? '#2E7D52' : '#C0392B' }}>
+//                             {q.score}%
+//                           </span>
+//                         </div>
+//                         <div className="quiz-meta">
+//                           {new Date(q.takeTime).toLocaleDateString()}
+//                           <span className={`quiz-status ${passed ? 'passed' : 'failed'}`}>
+//                             {passed ? '✅ Passed' : '❌ Failed'}
+//                           </span>
+//                         </div>
+//                       </div>
+//                     </div>
+//                   );
+//                 })}
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Right column */}
+//         <div className="stack">
+//           {/* Learning Analysis */}
+//           <div className="panel">
+//             <div className="panel-head">
+//               <h3>Learning Analysis</h3>
+//             </div>
+//             <div className="analysis-row" style={{ color: '#2E7D52' }}>
+//               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+//                 <path d="M4 17L10 11L14 15L20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+//               </svg>
+//               Strengths
+//               <span style={{ marginLeft: 'auto', fontWeight: 400, color: '#4B5563' }}>
+//                 {strengths.join(', ') || 'None yet'}
+//               </span>
+//             </div>
+//             <div className="analysis-row" style={{ color: '#C0392B' }}>
+//               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+//                 <path d="M4 7L10 13L14 9L20 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+//               </svg>
+//               Areas to Improve
+//               <span style={{ marginLeft: 'auto', fontWeight: 400, color: '#4B5563' }}>
+//                 {weaknesses.join(', ') || 'None yet'}
+//               </span>
+//             </div>
+//           </div>
+
+//           {/* AI Recommendations */}
+//           <div className="ai-card">
+//             <div className="ai-head">
+//               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+//                 <path d="M9 18H15M10 21H14" stroke="#E8735F" strokeWidth="1.7" strokeLinecap="round" />
+//                 <path d="M12 3C8.5 3 6 5.7 6 9C6 11.5 7.3 13 8.3 14C9 14.7 9 15.3 9 16H15C15 15.3 15 14.7 15.7 14C16.7 13 18 11.5 18 9C18 5.7 15.5 3 12 3Z" stroke="#E8735F" strokeWidth="1.7" strokeLinejoin="round" />
+//               </svg>
+//               <h3>AI Recommendations</h3>
+//             </div>
+//             <p>Based on your performance, we suggest you review the topics where you scored below 70%. Practice more and try again.</p>
+//           </div>
+
+//           {/* Quick Stats */}
+//           <div className="panel">
+//             <h3 style={{ marginBottom: '16px' }}>Quick Stats</h3>
+//             <div className="quick-grid">
+//               <div className="quick-tile t-red">
+//                 <div className="ql">Best Score</div>
+//                 <div className="qv">
+//                   {results.length > 0 ? `${Math.max(...results.map(r => r.score))}%` : 'N/A'}
+//                 </div>
+//               </div>
+//               <div className="quick-tile t-red">
+//                 <div className="ql">To Improve</div>
+//                 <div className="qv">
+//                   {results.length > 0 ? `${Math.min(...results.map(r => r.score))}%` : 'N/A'}
+//                 </div>
+//               </div>
+//               <div className="quick-tile t-green">
+//                 <div className="ql">Pass Rate</div>
+//                 <div className="qv">
+//                   {results.length > 0
+//                     ? `${Math.round((results.filter(r => r.score >= 70).length / results.length) * 100)}%`
+//                     : 'N/A'}
+//                 </div>
+//               </div>
+//               <div className="quick-tile t-gold">
+//                 <div className="ql">Total Time</div>
+//                 <div className="qv">
+//                   {results.length > 0
+//                     ? `${Math.round(results.reduce((acc, r) => acc + (r.takeTime ? new Date(r.takeTime).getTime() : 0), 0) / (1000 * 60))}m`
+//                     : 'N/A'}
+//                 </div>
+//               </div>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* CTA Strip */}
+//       <div className="cta-strip">
+//         <div className="left">
+//           <div className="cta-icon">
+//             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+//               <path d="M12 3C8.5 3 6 5.7 6 9C6 11.5 7.3 13 8.3 14C9 14.7 9 15.3 9 16H15C15 15.3 15 14.7 15.7 14C16.7 13 18 11.5 18 9C18 5.7 15.5 3 12 3Z" stroke="#fff" strokeWidth="1.7" strokeLinejoin="round" />
+//             </svg>
+//           </div>
+//           <div>
+//             <h4>Ready to learn something new?</h4>
+//             <p>Take a quiz and improve your skills. AI will recommend the best next topic.</p>
+//           </div>
+//         </div>
+//         <div className="btn-row">
+//           <button className="btn-primary" onClick={() => navigate('/student/quiz')}>Start Quiz</button>
+//           <button className="btn-outline" onClick={() => navigate('/student/reports')}>View Reports</button>
+//         </div>
+//       </div>
+//     </Layout>
+//   );
+// };
+
+// export default Dashboard;
+
+
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -587,10 +1058,11 @@ import {
   EmojiEvents,
   TrendingDown,
 } from '@mui/icons-material';
-import Layout from '../common/component/layout'; // ✅ Import Layout
+import Layout from '../common/component/layout';
 import StudentSidebar from './components/Sidebar';
 import API from '../common/services/api';
 import './StudentDashboard.css';
+import PaymentModal from './components/PaymentModal';
 
 // ----- Types -----
 interface User {
@@ -600,17 +1072,39 @@ interface User {
   LName: string;
   email: string;
   gradeId: number;
+  onboardingCompleted?: boolean;
 }
 
 interface QuizResult {
   _id: string;
-  resultId: number;
   quizId: number;
   score: number;
   totalQuestions: number;
+  percentage: number;
   takeTime: string;
-  subject?: string;
-  lesson?: string;
+  createdAt: string;
+  status: 'Passed' | 'Failed';
+}
+
+interface SubjectPerformance {
+  subjectId: number;
+  subjectName: string;
+  totalQuizzes: number;
+  totalPassed: number;
+  highScore: number;
+  lowScore: number;
+  progressRate: number;
+  lastQuizDate: string | null;
+}
+
+interface DashboardStats {
+  totalQuizzes: number;
+  averageScore: number;
+  subjectsPassed: number;
+  studyStreak: number;
+  strengths: string[];
+  weaknesses: string[];
+  recentHistory: QuizResult[];
 }
 
 // ----- Component -----
@@ -620,28 +1114,25 @@ const Dashboard: React.FC = () => {
   // Data state
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState<User | null>(null);
-  const [results, setResults] = useState<QuizResult[]>([]);
-
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<DashboardStats>({
     totalQuizzes: 0,
     averageScore: 0,
     subjectsPassed: 0,
     studyStreak: 0,
+    strengths: [],
+    weaknesses: [],
+    recentHistory: [],
   });
-  const [recentQuizzes, setRecentQuizzes] = useState<QuizResult[]>([]);
-  const [subjectPerformance, setSubjectPerformance] = useState<
-    { name: string; progress: number; color: string; trend: 'up' | 'down' }[]
-  >([]);
-  const [strengths, setStrengths] = useState<string[]>([]);
-  const [weaknesses, setWeaknesses] = useState<string[]>([]);
-
+  const [subjectPerformance, setSubjectPerformance] = useState<SubjectPerformance[]>([]);
+  const [lastActive, setLastActive] = useState<string>('Today');
+const [paymentModalOpen, setPaymentModalOpen] = useState(false); // <-- ADD THIS
   // Redirect if onboarding not completed
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     if (user && !user.onboardingCompleted) {
       navigate('/onboarding');
     }
-  }, []);
+  }, [navigate]);
 
   // Fetch dashboard data
   useEffect(() => {
@@ -653,75 +1144,26 @@ const Dashboard: React.FC = () => {
         const userData = userRes.data;
         setProfile(userData);
 
-        // 2. Quiz results - with fallback
-        let resultsData = [];
-        try {
-          const resultsRes = await API.get('/results');
-          resultsData = resultsRes.data;
-        } catch (e) {
-          console.warn('Results endpoint failed, using empty data');
-          resultsData = [];
+        // 2. Dashboard stats from backend
+        const statsRes = await API.get('/progress/dashboard');
+        const statsData: DashboardStats = statsRes.data;
+        setStats(statsData);
+
+        // 3. Subject performance
+        const subjectRes = await API.get('/progress/subjects');
+        const subjectData: SubjectPerformance[] = subjectRes.data;
+        setSubjectPerformance(subjectData);
+
+        // 4. Calculate last active from recent history
+        if (statsData.recentHistory && statsData.recentHistory.length > 0) {
+          const lastDate = new Date(statsData.recentHistory[0].createdAt || statsData.recentHistory[0].takeTime);
+          const now = new Date();
+          const diffDays = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDays === 0) setLastActive('Today');
+          else if (diffDays === 1) setLastActive('Yesterday');
+          else setLastActive(`${diffDays} days ago`);
         }
-        setResults(resultsData);
 
-        // 3. Progress - with fallback
-        let progressData = [];
-        try {
-          const progressRes = await API.get('/progress');
-          progressData = progressRes.data;
-        } catch (e) {
-          console.warn('Progress endpoint failed, using empty data');
-          progressData = [];
-        }
-
-        // ----- Compute stats -----
-        const total = resultsData.length;
-        const avg = total > 0 ? resultsData.reduce((acc: number, r: any) => acc + r.score, 0) / total : 0;
-        const passed = resultsData.filter((r: any) => r.score >= 70).length;
-
-        // Recent (last 4)
-        const sorted = [...resultsData].sort(
-          (a, b) => new Date(b.takeTime).getTime() - new Date(a.takeTime).getTime()
-        );
-        const recent = sorted.slice(0, 4);
-
-        // Subject performance from progress
-        const subjectMap: Record<number, string> = {
-          1: 'Mathematics',
-          2: 'English',
-          3: 'Physics',
-          4: 'Chemistry',
-          5: 'Biology',
-          6: 'History',
-        };
-        const colors = ['#C0392B', '#3B6EA5', '#2E7D52', '#C99A2E', '#C0392B', '#3B6EA5'];
-        const perf = progressData.map((p: any) => {
-          const name = subjectMap[p.subjectId] || `Subject ${p.subjectId}`;
-          const progressVal = p.quizTaken > 0 ? Math.round((p.quizPassed / p.quizTaken) * 100) : 0;
-          const trend: 'up' | 'down' = progressVal >= 70 ? 'up' : 'down';
-          const color = colors[(p.subjectId - 1) % colors.length] || '#7C3AED';
-          return { name, progress: progressVal, color, trend };
-        });
-
-        // Strengths / Weaknesses
-        const str: string[] = [];
-        const weak: string[] = [];
-        progressData.forEach((p: any) => {
-          const name = subjectMap[p.subjectId] || `Subject ${p.subjectId}`;
-          if (p.highScore >= 70) str.push(name);
-          if (p.lowScore <= 50) weak.push(name);
-        });
-
-        setStats({
-          totalQuizzes: total,
-          averageScore: Math.round(avg),
-          subjectsPassed: passed,
-          studyStreak: 12, // placeholder
-        });
-        setRecentQuizzes(recent);
-        setSubjectPerformance(perf);
-        setStrengths(str.length ? str : ['No strengths recorded yet']);
-        setWeaknesses(weak.length ? weak : ['No weaknesses recorded yet']);
       } catch (error) {
         console.error('Error loading dashboard:', error);
       } finally {
@@ -750,35 +1192,47 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  // ----- Stats cards -----
+  // Calculate additional stats from data
+  const totalSubjects = subjectPerformance.length;
+  const bestScore = subjectPerformance.length > 0 
+    ? Math.max(...subjectPerformance.map(s => s.highScore || 0))
+    : 0;
+  const lowestScore = subjectPerformance.length > 0 
+    ? Math.min(...subjectPerformance.map(s => s.lowScore || 0))
+    : 0;
+  const passRate = stats.totalQuizzes > 0 
+    ? Math.round((stats.subjectsPassed / totalSubjects) * 100)
+    : 0;
+
+  // ----- Stats cards with real data -----
   const statsCards = [
     {
       title: 'Total Quizzes',
       value: String(stats.totalQuizzes),
       icon: <Assignment sx={{ color: '#C0392B' }} />,
       bgColor: 'ic-red',
-      change: '+12%',
+      change: stats.totalQuizzes > 0 ? `${Math.round((stats.totalQuizzes / 10) * 100)}%` : '0%',
     },
     {
       title: 'Average Score',
       value: `${stats.averageScore}%`,
       icon: <TrendingUp sx={{ color: '#2E7D52' }} />,
       bgColor: 'ic-green',
-      change: '+5%',
+      change: stats.averageScore > 50 ? '+5%' : '+0%',
     },
     {
       title: 'Subjects Passed',
-      value: `${stats.subjectsPassed}/${subjectPerformance.length}`,
+      value: `${stats.subjectsPassed}/${totalSubjects}`,
       icon: <School sx={{ color: '#3B6EA5' }} />,
       bgColor: 'ic-blue',
-      change: '+2',
+      change: stats.subjectsPassed > 0 ? `+${stats.subjectsPassed}` : '0',
     },
     {
       title: 'Study Streak',
       value: String(stats.studyStreak),
       icon: <EmojiEvents sx={{ color: '#C99A2E' }} />,
       bgColor: 'ic-gold',
-      change: '🔥 days',
+      change: stats.studyStreak > 0 ? `${stats.studyStreak} days` : '0 days',
     },
   ];
 
@@ -795,7 +1249,7 @@ const Dashboard: React.FC = () => {
             <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
             <path d="M12 7V12L15 14.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
-          Last active: Today
+          Last active: {lastActive}
         </div>
       </div>
 
@@ -829,22 +1283,36 @@ const Dashboard: React.FC = () => {
             </div>
             <p className="sub">Track your progress across all subjects</p>
             <div className="subject-grid">
-              {subjectPerformance.map((subj, idx) => (
-                <div className="subject-row" key={idx}>
-                  <div className="subject-name">
-                    <span className="dot" style={{ background: subj.color }}></span>
-                    <span>{subj.name}</span>
-                  </div>
-                  <div className="subject-score">
-                    <span>{subj.progress}%</span>
-                    {subj.trend === 'up' ? (
-                      <TrendingUp sx={{ color: '#2E7D52', fontSize: 16 }} />
-                    ) : (
-                      <TrendingDown sx={{ color: '#C0392B', fontSize: 16 }} />
-                    )}
-                  </div>
+              {subjectPerformance.length === 0 ? (
+                <div className="empty">
+                  <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+                    <rect x="5" y="3" width="14" height="18" rx="1.5" stroke="#9AA3AE" strokeWidth="1.6" strokeDasharray="3 3" />
+                  </svg>
+                  No subjects yet. Complete a quiz to start tracking!
                 </div>
-              ))}
+              ) : (
+                subjectPerformance.map((subj, idx) => {
+                  const colors = ['#C0392B', '#3B6EA5', '#2E7D52', '#C99A2E', '#7C3AED', '#E8735F'];
+                  const color = colors[idx % colors.length];
+                  const trend = subj.progressRate >= 70 ? 'up' : 'down';
+                  return (
+                    <div className="subject-row" key={idx}>
+                      <div className="subject-name">
+                        <span className="dot" style={{ background: color }}></span>
+                        <span>{subj.subjectName}</span>
+                      </div>
+                      <div className="subject-score">
+                        <span>{subj.progressRate}%</span>
+                        {trend === 'up' ? (
+                          <TrendingUp sx={{ color: '#2E7D52', fontSize: 16 }} />
+                        ) : (
+                          <TrendingDown sx={{ color: '#C0392B', fontSize: 16 }} />
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
 
@@ -855,7 +1323,7 @@ const Dashboard: React.FC = () => {
               <a href="#" onClick={() => navigate('/student/reports')}>VIEW ALL →</a>
             </div>
             <p className="sub">Your latest quiz attempts</p>
-            {recentQuizzes.length === 0 ? (
+            {stats.recentHistory.length === 0 ? (
               <div className="empty">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
                   <rect x="5" y="3" width="14" height="18" rx="1.5" stroke="#9AA3AE" strokeWidth="1.6" strokeDasharray="3 3" />
@@ -864,8 +1332,8 @@ const Dashboard: React.FC = () => {
               </div>
             ) : (
               <div className="quiz-list">
-                {recentQuizzes.map((q) => {
-                  const passed = q.score >= 70;
+                {stats.recentHistory.slice(0, 4).map((q) => {
+                  const passed = q.status === 'Passed';
                   return (
                     <div className="quiz-item" key={q._id}>
                       <div className="quiz-icon">
@@ -875,11 +1343,11 @@ const Dashboard: React.FC = () => {
                         <div className="quiz-title">
                           <span>Quiz {q.quizId}</span>
                           <span className="quiz-score" style={{ color: passed ? '#2E7D52' : '#C0392B' }}>
-                            {q.score}%
+                            {q.percentage || q.score}%
                           </span>
                         </div>
                         <div className="quiz-meta">
-                          {new Date(q.takeTime).toLocaleDateString()}
+                          {new Date(q.createdAt || q.takeTime).toLocaleDateString()}
                           <span className={`quiz-status ${passed ? 'passed' : 'failed'}`}>
                             {passed ? '✅ Passed' : '❌ Failed'}
                           </span>
@@ -906,7 +1374,7 @@ const Dashboard: React.FC = () => {
               </svg>
               Strengths
               <span style={{ marginLeft: 'auto', fontWeight: 400, color: '#4B5563' }}>
-                {strengths.join(', ') || 'None yet'}
+                {stats.strengths.length > 0 ? stats.strengths.join(', ') : 'Complete more quizzes to identify strengths'}
               </span>
             </div>
             <div className="analysis-row" style={{ color: '#C0392B' }}>
@@ -915,7 +1383,7 @@ const Dashboard: React.FC = () => {
               </svg>
               Areas to Improve
               <span style={{ marginLeft: 'auto', fontWeight: 400, color: '#4B5563' }}>
-                {weaknesses.join(', ') || 'None yet'}
+                {stats.weaknesses.length > 0 ? stats.weaknesses.join(', ') : 'No weaknesses identified yet'}
               </span>
             </div>
           </div>
@@ -929,7 +1397,16 @@ const Dashboard: React.FC = () => {
               </svg>
               <h3>AI Recommendations</h3>
             </div>
-            <p>Based on your performance, we suggest you review the topics where you scored below 70%. Practice more and try again.</p>
+            {stats.weaknesses.length > 0 ? (
+              <p>
+                Based on your performance, we suggest you review <strong>{stats.weaknesses.slice(0, 2).join(' and ')}</strong>.
+                Practice more quizzes on these topics to improve your score.
+              </p>
+            ) : stats.totalQuizzes === 0 ? (
+              <p>Complete your first quiz to get personalized AI recommendations!</p>
+            ) : (
+              <p>Great job! You're performing well across all subjects. Keep up the good work!</p>
+            )}
           </div>
 
           {/* Quick Stats */}
@@ -939,28 +1416,26 @@ const Dashboard: React.FC = () => {
               <div className="quick-tile t-red">
                 <div className="ql">Best Score</div>
                 <div className="qv">
-                  {results.length > 0 ? `${Math.max(...results.map(r => r.score))}%` : 'N/A'}
+                  {stats.totalQuizzes > 0 ? `${bestScore}%` : 'N/A'}
                 </div>
               </div>
               <div className="quick-tile t-red">
                 <div className="ql">To Improve</div>
                 <div className="qv">
-                  {results.length > 0 ? `${Math.min(...results.map(r => r.score))}%` : 'N/A'}
+                  {stats.totalQuizzes > 0 ? `${lowestScore}%` : 'N/A'}
                 </div>
               </div>
               <div className="quick-tile t-green">
                 <div className="ql">Pass Rate</div>
                 <div className="qv">
-                  {results.length > 0
-                    ? `${Math.round((results.filter(r => r.score >= 70).length / results.length) * 100)}%`
-                    : 'N/A'}
+                  {stats.totalQuizzes > 0 ? `${passRate}%` : 'N/A'}
                 </div>
               </div>
               <div className="quick-tile t-gold">
                 <div className="ql">Total Time</div>
                 <div className="qv">
-                  {results.length > 0
-                    ? `${Math.round(results.reduce((acc, r) => acc + (r.takeTime ? new Date(r.takeTime).getTime() : 0), 0) / (1000 * 60))}m`
+                  {stats.totalQuizzes > 0 && stats.recentHistory.length > 0
+                    ? `${Math.round(stats.recentHistory.length * 5)}m` // Estimate
                     : 'N/A'}
                 </div>
               </div>
