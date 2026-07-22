@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: quizai-telegram-bot
+    restart: unless-stopped
+    environment:
+      - BOT_TOKEN=${BOT_TOKEN}
+      - API_BASE_URL=${API_BASE_URL}
+      - CHAPA_PROVIDER_TOKEN=${CHAPA_PROVIDER_TOKEN}
+      - NODE_ENV=production
+    volumes:
+      - ./logs:/app/logs
