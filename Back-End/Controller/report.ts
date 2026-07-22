@@ -272,7 +272,7 @@
 // };
 
 
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import QuizResult from '../models/QuizResult';
 import StudentProgress from '../models/StudentProgress';
@@ -280,7 +280,7 @@ import Subject from '../models/Subject';
 import Lesson from '../models/Lesson';
 import Quiz from '../models/Quiz';
 import Grade from '../models/Grade';
-
+import User from '../models/User';
 // Get summary stats
 export const getSummaryStats = async (req: AuthRequest, res: Response) => {
   try {
@@ -531,6 +531,194 @@ export const getAIInsights = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Error fetching AI insights:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
+export const getStudentReportByTelegram = async (req: Request, res: Response) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    if (!telegramId) {
+      return res.status(400).json({ message: 'Missing telegramId' });
+    }
+
+    // Find user by telegramId
+    const user = await User.findOne({ telegramId });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get all quiz results for this user
+    const results = await QuizResult.find({ studentId: user._id }).sort({ takeTime: -1 });
+
+    if (results.length === 0) {
+      return res.json({
+        user: {
+          name: `${user.FName} ${user.LName}`.trim() || user.telegramUsername || 'Student',
+          telegramUsername: user.telegramUsername,
+        },
+        totalQuizzes: 0,
+        averageScore: 0,
+        bestScore: 0,
+        passRate: 0,
+        recentHistory: [],
+      });
+    }
+
+    // Summary stats
+    const totalQuizzes = results.length;
+    const scores = results.map(r => (r.score / r.totalQuestions) * 100);
+    const averageScore = scores.reduce((a, b) => a + b, 0) / scores.length;
+    const bestScore = Math.max(...scores);
+    const passed = results.filter(r => (r.score / r.totalQuestions) >= 0.7).length;
+    const passRate = (passed / totalQuizzes) * 100;
+
+    // Recent history (last 5)
+  const recent = results.slice(0, 10).map(r => ({
+  resultId: r._id.toString(),   // <-- add this
+  quizId: r.quizId,
+  score: r.score,
+  total: r.totalQuestions,
+  percentage: Math.round((r.score / r.totalQuestions) * 100),
+  date: r.createdAt || r.takeTime,
+}));
+
+    res.json({
+      user: {
+        name: `${user.FName} ${user.LName}`.trim() || user.telegramUsername || 'Student',
+        telegramUsername: user.telegramUsername,
+      },
+      totalQuizzes,
+      averageScore: Math.round(averageScore),
+      bestScore: Math.round(bestScore),
+      passRate: Math.round(passRate),
+      recentHistory: recent,
+    });
+  } catch (error) {
+    console.error('Error fetching student report:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+export const getStudentSubjects = async (req: Request, res: Response) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    const user = await User.findOne({ telegramId });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const results = await QuizResult.find({ studentId: user._id });
+    if (results.length === 0) return res.json([]);
+
+    const quizIds = [...new Set(results.map(r => r.quizId))];
+    const quizzes = await Quiz.find({ quizId: { $in: quizIds } });
+    const lessonIds = [...new Set(quizzes.map(q => q.lessonId))];
+    const lessons = await Lesson.find({ lessonId: { $in: lessonIds } });
+    const subjectIds = [...new Set(lessons.map(l => l.subjectId))];
+    const subjects = await Subject.find({ subjectId: { $in: subjectIds } });
+
+    // Pre-fetch grades
+    const grades = await Grade.find();
+    const gradeMap = new Map(grades.map(g => [g.gradeId, g.level]));
+
+    const subjectStats = subjects.map(subject => {
+      const subjectLessons = lessons.filter(l => l.subjectId === subject.subjectId);
+      const subjectLessonIds = subjectLessons.map(l => l.lessonId);
+      const subjectQuizIds = quizzes.filter(q => subjectLessonIds.includes(q.lessonId)).map(q => q.quizId);
+      const subjectResults = results.filter(r => subjectQuizIds.includes(r.quizId));
+      
+      if (subjectResults.length === 0) return null;
+      const scores = subjectResults.map(r => (r.score / r.totalQuestions) * 100);
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const best = Math.max(...scores);
+      return {
+        subjectId: subject.subjectId,
+        name: subject.name,
+        gradeId: subject.gradeId,
+        gradeLevel: gradeMap.get(subject.gradeId) || subject.gradeId,
+        averageScore: Math.round(avg),
+        bestScore: Math.round(best),
+        totalQuizzes: subjectResults.length,
+      };
+    }).filter(s => s !== null);
+
+    res.json(subjectStats);
+  } catch (error) {
+    console.error('Error fetching student subjects:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get lessons for a subject (with stats)
+export const getStudentLessonsBySubject = async (req: Request, res: Response) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    const subjectId = Number(req.params.subjectId);
+    const user = await User.findOne({ telegramId });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const results = await QuizResult.find({ studentId: user._id });
+    if (results.length === 0) return res.json([]);
+
+    const quizIds = [...new Set(results.map(r => r.quizId))];
+    const quizzes = await Quiz.find({ quizId: { $in: quizIds } });
+    const lessons = await Lesson.find({ subjectId });
+    const lessonIds = lessons.map(l => l.lessonId);
+    const lessonQuizIds = quizzes.filter(q => lessonIds.includes(q.lessonId)).map(q => q.quizId);
+    const lessonResults = results.filter(r => lessonQuizIds.includes(r.quizId));
+
+    const lessonStats = lessons.map(lesson => {
+      const lessonQuizzes = quizzes.filter(q => q.lessonId === lesson.lessonId);
+      const lessonQuizIds = lessonQuizzes.map(q => q.quizId);
+      const lessonResults = results.filter(r => lessonQuizIds.includes(r.quizId));
+      if (lessonResults.length === 0) return null;
+      const scores = lessonResults.map(r => (r.score / r.totalQuestions) * 100);
+      const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+      const best = Math.max(...scores);
+      return {
+        lessonId: lesson.lessonId,
+        title: lesson.title,
+        averageScore: Math.round(avg),
+        bestScore: Math.round(best),
+        totalQuizzes: lessonResults.length,
+      };
+    }).filter(l => l !== null);
+
+    res.json(lessonStats);
+  } catch (error) {
+    console.error('Error fetching student lessons:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get quizzes taken for a lesson (with result IDs)
+export const getStudentQuizzesByLesson = async (req: Request, res: Response) => {
+  try {
+    const telegramId = Number(req.params.telegramId);
+    const lessonId = Number(req.params.lessonId);
+    const user = await User.findOne({ telegramId });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const results = await QuizResult.find({ studentId: user._id });
+    if (results.length === 0) return res.json([]);
+
+    const quizzes = await Quiz.find({ lessonId });
+    const quizIds = quizzes.map(q => q.quizId);
+    const lessonResults = results.filter(r => quizIds.includes(r.quizId));
+
+    const quizStats = lessonResults.map(r => ({
+      quizId: r.quizId,
+      resultId: r._id.toString(),
+      score: r.score,
+      total: r.totalQuestions,
+      percentage: Math.round((r.score / r.totalQuestions) * 100),
+      date: r.createdAt || r.takeTime,
+      title: quizzes.find(q => q.quizId === r.quizId)?.title || 'Quiz',
+    }));
+
+    res.json(quizStats);
+  } catch (error) {
+    console.error('Error fetching student quizzes:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };

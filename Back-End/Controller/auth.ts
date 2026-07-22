@@ -545,15 +545,20 @@ export const login = (req: Request, res: Response, next: NextFunction) => {
 
       const { accessToken, refreshToken } = generateTokens(user._id.toString(), roles[0] || 'student');
 
+      // ✅ Build user data with purchasedDifficulties and isPremium
+      const userData = {
+        id: user._id,
+        email: user.email,
+        FName: user.FName,
+        LName: user.LName,
+        roles,
+        permissions,
+        purchasedDifficulties: user.purchasedDifficulties || [], // ✅ ADD THIS
+        isPremium: user.isPremium || false, // ✅ ADD THIS
+      };
+
       res.json({
-        user: {
-          id: user._id,
-          email: user.email,
-          FName: user.FName,
-          LName: user.LName,
-          roles,
-          permissions,
-        },
+        user: userData,
         accessToken,
         refreshToken,
       });
@@ -660,15 +665,21 @@ export const googleLogin = async (req: Request, res: Response) => {
     const { accessToken, refreshToken } = generateTokens(user._id.toString(), roles[0] || 'student');
 
     console.log('✅ Login successful for:', email);
+    
+    // ✅ Build user data with purchasedDifficulties and isPremium
+    const userData = {
+      id: user._id,
+      email: user.email,
+      FName: user.FName,
+      LName: user.LName,
+      roles,
+      permissions,
+      purchasedDifficulties: user.purchasedDifficulties || [], // ✅ ADD THIS
+      isPremium: user.isPremium || false, // ✅ ADD THIS
+    };
+
     res.json({
-      user: {
-        id: user._id,
-        email: user.email,
-        FName: user.FName,
-        LName: user.LName,
-        roles,
-        permissions,
-      },
+      user: userData,
       accessToken,
       refreshToken,
     });
@@ -713,6 +724,10 @@ export const getMe = async (req: any, res: Response) => {
       roles,
       permissions,
       PImage: user.PImage,
+      // ✅ ADD THESE TWO LINES
+      purchasedDifficulties: user.purchasedDifficulties || [],
+      isPremium: user.isPremium || false,
+      premiumExpiry: user.premiumExpiry || null,
     });
   } catch (error) {
     console.error('Get me error:', error);

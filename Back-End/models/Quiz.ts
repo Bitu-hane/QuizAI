@@ -14,7 +14,8 @@ const QuizSchema = new Schema<IQuiz>({
   title: { type: String, required: true },
   lessonId: { type: Number, ref: 'Lesson', required: true },
   timelimit: { type: Number },
-  difficulty: { type: Number },
+  difficulty: { type: Number, required: true },
+
   questions: { type: [Number], ref: 'Question' }
 });
 

@@ -3,6 +3,7 @@ import OpenAI from 'openai';
 
 // ✅ Use Groq's free endpoint
 const openai = new OpenAI({
+  // HIGHLIGHT: This makes the OpenAI SDK send requests to Groq.
   baseURL: "https://api.groq.com/openai/v1",
   apiKey: process.env.GROQ_API_KEY,
 });

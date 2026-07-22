@@ -9,6 +9,11 @@
 
 import express from 'express';
 import { protect } from '../middleware/auth';
+import { getStudentReportByTelegram } from '../Controller/report';
+import { getStudentSubjects,
+  getStudentLessonsBySubject,
+  getStudentQuizzesByLesson,
+} from '../Controller/report';
 import {
   getSummaryStats,
   getSubjectPerformance,
@@ -17,7 +22,11 @@ import {
 } from '../Controller/report';
 
 const router = express.Router();
-
+router.get('/student/:telegramId', getStudentReportByTelegram);
+// Public routes (for bot)
+router.get('/student/:telegramId/subjects', getStudentSubjects);
+router.get('/student/:telegramId/subject/:subjectId/lessons', getStudentLessonsBySubject);
+router.get('/student/:telegramId/lesson/:lessonId/quizzes', getStudentQuizzesByLesson);
 // All report routes require authentication
 router.use(protect);
 

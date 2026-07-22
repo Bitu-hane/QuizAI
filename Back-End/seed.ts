@@ -732,7 +732,7 @@ const seed = async () => {
             title: `${subjectName} – ${lessonTitle} Quiz`,
             lessonId,
             timelimit: 10,
-            difficulty: 2,
+            difficulty: 4,
             questions: questionIds,
           });
           quizIdCounter++;

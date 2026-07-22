@@ -82,7 +82,7 @@ import resultRoutes from './routes/result';
 import reportRoutes from './routes/report'; 
 import progressRoutes from './routes/progess';  // ✅ fixed typo
 import adminRoutes from './routes/admin';
-
+import paymentRoutes from './routes/Payment';  // ✅ added payment routes
 import { errorHandler } from './utils/errorHandler';
 import userRoutes from './routes/User';
 
@@ -110,6 +110,7 @@ app.use((req, res, next) => {
   next();
 });
 
+
 // Test route
 app.get('/ping', (req, res) => res.send('pong'));
 
@@ -130,6 +131,8 @@ const startServer = async () => {
     app.use('/api/admin', adminRoutes);
     app.use('/api/users', userRoutes);  
     app.use('/api/reports', reportRoutes);
+    app.use('/api/payment', paymentRoutes);
+
 app.post('/api/users/onboarding', (req, res) => {
   console.log('✅ Onboarding route hit!', req.body);
   res.json({ message: 'Onboarding works!' });
@@ -137,9 +140,15 @@ app.post('/api/users/onboarding', (req, res) => {
     app.use(errorHandler);
 
     const PORT = process.env.PORT || 5001;
-    app.listen(PORT, () => {
+     const server = app.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
+
+    server.on('error', (err) => {
+      console.error('❌ Server failed to start:', err);
+      process.exit(1);
+    });
+
   } catch (err) {
     console.error('❌ Failed to start server:', err);
     process.exit(1);

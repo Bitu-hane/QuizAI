@@ -14,6 +14,6 @@ import { protect } from '../middleware/auth';
 const router = express.Router();
 
 // ✅ This should be the route
-router.get('/', protect, getLessonsByGradeAndSubject);
+router.get('/', getLessonsByGradeAndSubject);
 
 export default router;

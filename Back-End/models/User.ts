@@ -46,8 +46,15 @@ export interface IUser extends Document {
   PImage?: string[];
   email: string;
   status: 'active' | 'suspended';
+  isPremium: boolean;
+  premiumExpiry?: Date;
+  purchasedDifficulties: number[];
   gradeId?: number;
   onboardingCompleted?: boolean;  // ← add this
+  telegramId?: number;
+  telegramUsername?: string;
+  telegramFirstName?: string;
+  telegramLastName?: string;
 }
 
 const UserSchema = new Schema<IUser>({
@@ -62,8 +69,15 @@ const UserSchema = new Schema<IUser>({
   PImage: { type: [String], default: [] },
   email: { type: String, required: true, unique: true },
   status: { type: String, enum: ['active', 'suspended'], default: 'active' },
+  isPremium: { type: Boolean, default: false },
+premiumExpiry: { type: Date },
+purchasedDifficulties: { type: [Number], default: [] },
   gradeId: { type: Number, ref: 'Grade' },
   onboardingCompleted: { type: Boolean, default: false },  // ← add this
+  telegramId: { type: Number, unique: true, sparse: true },
+  telegramUsername: { type: String },
+  telegramFirstName: { type: String },
+  telegramLastName: { type: String },
 });
 
 export default mongoose.model<IUser>('User', UserSchema);
