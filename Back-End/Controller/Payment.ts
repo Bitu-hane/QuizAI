@@ -917,6 +917,74 @@ export const verifyPayment = async (req: Request, res: Response) => {
   }
 };
 
+export const verifyChapaPublic = async (req: Request, res: Response) => {
+  try {
+    const { tx_ref } = req.body;
+    if (!tx_ref) {
+      return res.status(400).json({ success: false, message: 'tx_ref is required' });
+    }
+
+    console.log('🔍 Manual verification requested for tx_ref:', tx_ref);
+
+    const verifyResponse = await axios.get(
+      `${process.env.CHAPA_API_URL || 'https://api.chapa.co/v1'}/transaction/verify/${tx_ref}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}`,
+        },
+      }
+    );
+
+    const paymentData = verifyResponse.data?.data;
+    if (paymentData && paymentData.status === 'success') {
+      let difficulty = 0;
+      let lessonId = 0;
+      let quizId = 0;
+      let userId = '';
+
+      if (tx_ref.startsWith('unlock-') || tx_ref.startsWith('u-')) {
+        const parts = tx_ref.split('-');
+        if (parts.length >= 6) {
+          difficulty = parseInt(parts[1]);
+          lessonId = parseInt(parts[2]);
+          quizId = parseInt(parts[3]);
+          userId = parts[4];
+        } else if (parts.length >= 4) {
+          difficulty = parseInt(parts[1]);
+          userId = parts[2];
+        }
+
+        if (userId && difficulty) {
+          await User.findByIdAndUpdate(userId, {
+            $addToSet: { purchasedDifficulties: difficulty }
+          });
+          console.log(`✅ [Manual Verify] Difficulty ${difficulty} unlocked for user ${userId}`);
+        }
+      }
+
+      return res.json({
+        success: true,
+        message: 'Payment verified successfully!',
+        difficulty,
+        lessonId,
+        quizId,
+        data: paymentData
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: 'Payment not completed on Chapa yet.'
+      });
+    }
+  } catch (error: any) {
+    console.error('❌ Manual verification error:', error.response?.data || error.message);
+    res.status(500).json({
+      success: false,
+      message: error.response?.data?.message || 'Verification failed or payment incomplete.'
+    });
+  }
+};
+
 // ========== WEBHOOK HANDLER ==========
 
 export const webhookHandler = async (req: Request, res: Response) => {

@@ -53,7 +53,8 @@ import {
   verifyPayment, 
   webhookHandler,
   initializeChapaPayment,
-  verifyAndRedirect
+  verifyAndRedirect,
+  verifyChapaPublic
 } from '../Controller/Payment';
 import { protect } from '../middleware/auth';
 
@@ -63,6 +64,7 @@ const router = express.Router();
 router.post('/webhook', webhookHandler);
 router.post('/initialize-chapa', initializeChapaPayment);
 router.get('/verify-and-redirect', verifyAndRedirect);
+router.post('/verify-chapa', verifyChapaPublic);
 
 // ===== PROTECTED ROUTES (require authentication) =====
 router.use(protect);
