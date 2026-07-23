@@ -109,6 +109,18 @@ export const purchaseDifficulty = async (telegramId: number, difficulty: number)
     difficulty,
   });
 };
+
+// --- Initialize Chapa payment for Telegram user ---
+export const initializeChapaPayment = async (telegramId: number, difficulty: number, amount: number, lessonId?: number, quizId?: number) => {
+  console.log(`📤 Initializing Chapa payment for telegramId ${telegramId}, diff ${difficulty}, amount ${amount}, quizId ${quizId}`);
+  return api.post('/payment/initialize-chapa', {
+    telegramId,
+    difficulty,
+    amount,
+    lessonId,
+    quizId,
+  });
+};
 // --- Get user grade ---
 export const getUserGrade = async (telegramId: number) => {
   return api.get(`/users/grade?telegramId=${telegramId}`);

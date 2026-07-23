@@ -1368,7 +1368,8 @@ import {
   getStudentLessons,
   getStudentQuizzes,
   getResultById,
-  purchaseDifficulty
+  purchaseDifficulty,
+  initializeChapaPayment,
 } from './services/api';
 import { SessionData } from './types/session';
 
@@ -1406,6 +1407,44 @@ async function sendOrEdit(ctx: BotContext, text: string, extra?: any) {
 // ================= START COMMAND =================
 bot.command('start', async (ctx) => {
   ensureSession(ctx);
+  
+  // ✅ Check for payment success redirect deep links (e.g. payment_success_3_12)
+  if (ctx.message && 'text' in ctx.message && ctx.message.text) {
+    const args = ctx.message.text.split(' ');
+    const param = args[1];
+    
+    if (param && (param.startsWith('payment_success') || param.startsWith('paid'))) {
+      const parts = param.split('_');
+      const difficulty = parts.length >= 3 && parts[2] ? parseInt(parts[2]) : null;
+      const lessonId = parts.length >= 4 && parts[3] ? parseInt(parts[3]) : (ctx.session.selectedLesson || null);
+      const quizId = parts.length >= 5 && parts[4] ? parseInt(parts[4]) : null;
+      
+      await ctx.reply(
+        `✅ **Payment Successful!** 🎉\n\n` +
+        `Difficulty Level ${difficulty || ''} has been unlocked.\n` +
+        `Opening your quiz questions now...`
+      );
+      
+      ctx.session.paymentSuccess = true;
+
+      // ✅ 1. If specific quizId is provided, launch quiz questions directly!
+      if (quizId && !isNaN(Number(quizId))) {
+        await startQuizById(ctx, Number(quizId));
+        return;
+      }
+
+      // ✅ 2. Otherwise if lessonId is provided, auto-start unlocked quiz in that lesson
+      if (lessonId && !isNaN(Number(lessonId))) {
+        ctx.session.selectedLesson = Number(lessonId);
+        ctx.session.currentQuiz = undefined;
+        ctx.session.awaitingAnswer = false;
+        ctx.session.awaitingQuestionIndex = undefined;
+        await showQuizzes(ctx, Number(lessonId));
+        return;
+      }
+    }
+  }
+
   const grades = [6, 7, 8, 9, 10, 11, 12];
   const keyboard: { text: string; callback_data: string }[] = grades.map(g => ({
     text: `Grade ${g}`,
@@ -1496,7 +1535,7 @@ bot.action(/learn_grade_(\d+)/, async (ctx) => {
   ctx.session.grade = grade;
   ctx.session.selectedSubject = undefined;
   ctx.session.selectedLesson = undefined;
-  await ctx.answerCbQuery(`Grade ${grade} selected`);
+  await ctx.answerCbQuery(`Grade ${grade} selected`).catch(() => {});
   await showSubjects(ctx, grade);
 });
 
@@ -1539,7 +1578,7 @@ bot.action(/learn_subject_(\d+)/, async (ctx) => {
   const subjectId = parseInt(ctx.match[1]);
   ctx.session.selectedSubject = subjectId;
   ctx.session.selectedLesson = undefined;
-  await ctx.answerCbQuery('Subject selected');
+  await ctx.answerCbQuery('Subject selected').catch(() => {});
   await showLessons(ctx, subjectId);
 });
 
@@ -1644,7 +1683,7 @@ async function showQuizzes(ctx: BotContext, lessonId: number) {
   }
 }
 
-// ================= UNLOCK QUIZ (NATIVE TELEGRAM INVOICE) =================
+// ================= UNLOCK QUIZ (CHAPA PAYMENT LINK) =================
 bot.action(/unlock_(\d+)_(\d+)_(\d+)/, async (ctx) => {
   const quizId = parseInt(ctx.match[1]);
   const difficulty = parseInt(ctx.match[2]);
@@ -1655,40 +1694,35 @@ bot.action(/unlock_(\d+)_(\d+)_(\d+)/, async (ctx) => {
   
   // ✅ Get price based on difficulty
   const prices: { [key: number]: number } = { 3: 500, 4: 700, 5: 1000 };
-  const amount = prices[difficulty] || 0;
+  const amount = prices[difficulty] || 500;
   
-  await ctx.answerCbQuery('🔓 Generating invoice...');
-  
-  // ✅ Check if provider token is set
-  const providerToken = process.env.CHAPA_PROVIDER_TOKEN;
-  if (!providerToken) {
-    console.error('❌ CHAPA_PROVIDER_TOKEN is not set in .env');
-    await ctx.reply('❌ Payment system is not configured. Please contact support.');
-    return;
-  }
+  await ctx.answerCbQuery('🔓 Generating Chapa payment link...');
   
   try {
-    // ✅ Send a native Telegram invoice
-    await ctx.replyWithInvoice({
-      title: `Unlock Difficulty Level ${difficulty}`,
-      description: `Access all quizzes at difficulty level ${difficulty}. One-time payment.`,
-      payload: JSON.stringify({ 
-        difficulty, 
-        quizId, 
-        lessonId,
-        userId: ctx.from.id 
-      }),
-      provider_token: providerToken, // ✅ Now guaranteed to be a string
-      currency: 'ETB',
-      prices: [
-        { label: `Difficulty Level ${difficulty} Unlock`, amount: amount * 100 }
-      ],
-      start_parameter: 'unlock_quiz',
-    });
+    const res = await initializeChapaPayment(ctx.from!.id, difficulty, amount, lessonId, quizId);
     
+    if (res.data && res.data.success && res.data.checkout_url) {
+      const checkoutUrl = res.data.checkout_url;
+      
+      await ctx.reply(
+        `🔒 **Unlock Difficulty Level ${difficulty}**\n\n` +
+        `Price: **${amount} ETB**\n\n` +
+        `Click the link below to pay on Chapa. Once completed, you will be redirected back here automatically to view your questions!`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: `💳 Pay ${amount} ETB on Chapa`, url: checkoutUrl }],
+              [{ text: '🔙 Back to Quizzes', callback_data: `learn_lesson_${lessonId}` }]
+            ],
+          },
+        }
+      );
+    } else {
+      await ctx.reply('❌ Failed to generate payment link. Please try again.');
+    }
   } catch (error: any) {
-    console.error('❌ Invoice error:', error);
-    await ctx.reply('❌ Failed to generate invoice. Please try again.');
+    console.error('❌ Chapa initialization error:', error.response?.data || error.message);
+    await ctx.reply('❌ Failed to generate payment link. Please try again.');
   }
 });
 
@@ -2065,6 +2099,13 @@ bot.on('text', async (ctx) => {
   console.log('⏭️ Not expecting an answer, ignoring.');
 });
 
+// ================= ERROR HANDLING =================
+bot.catch((err: any, ctx) => {
+  console.error(`❌ Telegraf error for ${ctx?.updateType || 'update'}:`, err.message || err);
+});
+
 // ================= LAUNCH =================
-bot.launch();
+bot.launch().catch((err: any) => {
+  console.error('❌ Bot launch error:', err.message || err);
+});
 console.log('🤖 QuizAI Bot is running with native Telegram payments!');
