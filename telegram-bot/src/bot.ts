@@ -1370,6 +1370,7 @@ import {
   getResultById,
   purchaseDifficulty,
   initializeChapaPayment,
+  verifyChapaPayment,
 } from './services/api';
 import { SessionData } from './types/session';
 

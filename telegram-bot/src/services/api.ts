@@ -121,6 +121,12 @@ export const initializeChapaPayment = async (telegramId: number, difficulty: num
     quizId,
   });
 };
+
+// --- Verify Chapa payment manually ---
+export const verifyChapaPayment = async (txRef: string) => {
+  console.log(`📤 Verifying Chapa payment for txRef: ${txRef}`);
+  return api.post('/payment/verify-chapa', { tx_ref: txRef });
+};
 // --- Get user grade ---
 export const getUserGrade = async (telegramId: number) => {
   return api.get(`/users/grade?telegramId=${telegramId}`);
