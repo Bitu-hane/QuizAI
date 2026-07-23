@@ -51,7 +51,9 @@ import {
   initializePayment, 
   purchaseDifficulty, 
   verifyPayment, 
-  webhookHandler 
+  webhookHandler,
+  initializeChapaPayment,
+  verifyAndRedirect
 } from '../Controller/Payment';
 import { protect } from '../middleware/auth';
 
@@ -59,6 +61,8 @@ const router = express.Router();
 
 // ===== PUBLIC ROUTES (no auth) =====
 router.post('/webhook', webhookHandler);
+router.post('/initialize-chapa', initializeChapaPayment);
+router.get('/verify-and-redirect', verifyAndRedirect);
 
 // ===== PROTECTED ROUTES (require authentication) =====
 router.use(protect);
